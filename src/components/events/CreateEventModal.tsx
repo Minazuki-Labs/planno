@@ -1,4 +1,7 @@
-import { useState, useEffect, SubmitEvent } from "react";
+import { useState, useEffect, useRef, SubmitEvent } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 import { EventItem } from "../../types/event";
 import { formatToYMD, formatToYMDHM } from "../../utils/date";
 
@@ -8,37 +11,76 @@ interface CreateEventModalProps {
   onCreate: (event: EventItem) => void;
 }
 
+const formatDateToYMD = (date: Date | null): string => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
+};
+
 export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModalProps) => {
   const [eventName, setEventName] = useState("");
   const [isRange, setIsRange] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [error, setError] = useState("");
 
-  // Helper to reset form to initial values
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
   const resetForm = () => {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date();
     setEventName("");
     setIsRange(false);
     setStartDate(today);
     setEndDate(today);
+    setError("");
   };
 
-  // Reset inputs whenever the modal is opened
   useEffect(() => {
     if (isOpen) {
       resetForm();
+      setTimeout(() => nameInputRef.current?.focus(), 50);
     }
-  }, [isOpen]);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const handleStartDateChange = (date: Date | null) => {
+    setStartDate(date);
+    if (date && endDate && date > endDate) {
+      setEndDate(date);
+    }
+  };
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!eventName.trim()) return;
 
-    let formattedEventDate = formatToYMD(startDate);
+    if (!eventName.trim()) {
+      setError("Please enter a valid event name.");
+      return;
+    }
+
+    if (!startDate) {
+      setError("Please select a start date.");
+      return;
+    }
+
+    const startFormatted = formatDateToYMD(startDate);
+    let formattedEventDate = formatToYMD(startFormatted);
+
     if (isRange && endDate) {
-      formattedEventDate = `${formatToYMD(startDate)} - ${formatToYMD(endDate)}`;
+      const endFormatted = formatDateToYMD(endDate);
+      formattedEventDate = `${formatToYMD(startFormatted)} - ${formatToYMD(endFormatted)}`;
     }
 
     const newEvent: EventItem = {
@@ -49,18 +91,30 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
     };
 
     onCreate(newEvent);
-    resetForm();
     onClose();
   };
 
+  const inputStyles = "w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-3 py-2.5 text-xs text-slate-100 outline-none transition-all cursor-pointer";
+
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-6">
+    <div 
+      className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div 
+        className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-6"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">Create New Event</h2>
+          <h2 id="modal-title" className="text-lg font-bold text-white">
+            Create New Event
+          </h2>
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close dialog"
             className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -71,75 +125,110 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              Event Name
+            <label htmlFor="event-name" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              Event Name <span className="text-rose-400">*</span>
             </label>
             <input
+              id="event-name"
+              ref={nameInputRef}
               type="text"
-              required
               placeholder="e.g. Design Systems Sync"
               value={eventName}
-              onChange={(e) => setEventName(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none transition-all"
+              onChange={(e) => {
+                setEventName(e.target.value);
+                if (error) setError("");
+              }}
+              className={`w-full bg-slate-950 border ${
+                error ? "border-rose-500 focus:ring-rose-500" : "border-slate-800 focus:border-indigo-500 focus:ring-indigo-500"
+              } focus:ring-1 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none transition-all`}
             />
+            {error && <p className="text-xs text-rose-400 mt-1.5">{error}</p>}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Event Date Format
+                Duration Type
               </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl mb-3">
               <button
                 type="button"
-                onClick={() => setIsRange(!isRange)}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors cursor-pointer"
+                onClick={() => setIsRange(false)}
+                className={`py-1.5 text-xs font-medium rounded-lg transition-all ${
+                  !isRange 
+                    ? "bg-slate-800 text-white shadow-sm" 
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
               >
-                {isRange ? "Switch to Single Day" : "Switch to Date Range"}
+                Single Day
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRange(true)}
+                className={`py-1.5 text-xs font-medium rounded-lg transition-all ${
+                  isRange 
+                    ? "bg-slate-800 text-white shadow-sm" 
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Multi-Days
               </button>
             </div>
 
             {isRange ? (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="block text-[10px] text-slate-500 uppercase mb-1">Start Date</span>
-                  <input
-                    type="date"
-                    required
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-3 py-2.5 text-xs text-slate-100 outline-none transition-all [color-scheme:dark]"
+                  <label htmlFor="start-date" className="block text-[10px] text-slate-400 font-medium uppercase mb-1">
+                    Start Date
+                  </label>
+                  <DatePicker
+                    id="start-date"
+                    selected={startDate}
+                    onChange={handleStartDateChange}
+                    minDate={new Date()}
+                    dateFormat="yyyy/MM/dd"
+                    className={inputStyles}
+                    wrapperClassName="w-full"
                   />
                 </div>
                 <div>
-                  <span className="block text-[10px] text-slate-500 uppercase mb-1">End Date</span>
-                  <input
-                    type="date"
-                    required
-                    min={startDate}
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-3 py-2.5 text-xs text-slate-100 outline-none transition-all [color-scheme:dark]"
+                  <label htmlFor="end-date" className="block text-[10px] text-slate-400 font-medium uppercase mb-1">
+                    End Date
+                  </label>
+                  <DatePicker
+                    id="end-date"
+                    selected={endDate}
+                    onChange={setEndDate}
+                    minDate={startDate || new Date()}
+                    dateFormat="yyyy/MM/dd"
+                    className={inputStyles}
+                    wrapperClassName="w-full"
                   />
                 </div>
               </div>
             ) : (
               <div>
-                <input
-                  type="date"
-                  required
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 outline-none transition-all [color-scheme:dark]"
+                <label htmlFor="single-date" className="sr-only">Date</label>
+                <DatePicker
+                  id="single-date"
+                  selected={startDate}
+                  onChange={handleStartDateChange}
+                  minDate={startDate || new Date()}
+                  dateFormat="yyyy/MM/dd"
+                  className={inputStyles}
+                  wrapperClassName="w-full"
                 />
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/60">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-slate-200 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer"
             >
               Cancel
             </button>

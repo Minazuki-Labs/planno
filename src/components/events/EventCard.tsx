@@ -12,11 +12,6 @@ export const EventCard = ({ event, onSelect }: EventCardProps) => {
       className="group relative flex flex-col justify-between bg-slate-900/60 backdrop-blur-md border border-slate-800/80 hover:border-slate-700/80 p-6 rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5 cursor-pointer"
     >
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-md">
-            Upcoming
-          </span>
-        </div>
         <h2 className="text-lg font-semibold text-slate-100 group-hover:text-indigo-300 transition-colors line-clamp-2">
           {event.name}
         </h2>
