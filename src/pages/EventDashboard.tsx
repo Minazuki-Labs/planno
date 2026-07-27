@@ -1,20 +1,13 @@
 import { useState } from "react";
-import { EventItem } from "../types/event";
+import { useEventStore } from "../store/useEventStore";
 import { EventCard } from "../components/events/EventCard";
 import { CreateEventModal } from "../components/events/CreateEventModal";
 
-interface EventDashboardProps {
-  events: EventItem[];
-  onSelectEvent: (event: EventItem) => void;
-  onCreateEvent: (newEvent: EventItem) => void;
-}
-
-export const EventDashboard = ({
-  events,
-  onSelectEvent,
-  onCreateEvent,
-}: EventDashboardProps) => {
+export const EventDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const events = useEventStore((state) => state.events);
+  const selectEvent = useEventStore((state) => state.selectEvent);
 
   return (
     <div className="relative max-w-6xl mx-auto">
@@ -33,12 +26,17 @@ export const EventDashboard = ({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pb-24">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} onSelect={onSelectEvent} />
+            <EventCard 
+              key={event.id} 
+              event={event} 
+              onSelect={(e) => selectEvent(e.id)} 
+            />
           ))}
         </div>
       )}
 
       <button
+        type="button"
         onClick={() => setIsModalOpen(true)}
         title="Create Event"
         className="fixed bottom-8 right-8 flex items-center justify-center w-14 h-14 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-full shadow-lg shadow-indigo-600/30 transition-all duration-200 cursor-pointer z-40 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-slate-950"
@@ -48,11 +46,7 @@ export const EventDashboard = ({
         </svg>
       </button>
 
-      <CreateEventModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onCreate={onCreateEvent}
-      />
+      <CreateEventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

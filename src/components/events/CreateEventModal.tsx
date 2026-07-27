@@ -4,11 +4,11 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import { EventItem } from "../../types/event";
 import { formatToYMD, formatToYMDHM } from "../../utils/date";
+import { useEventStore } from "../../store/useEventStore";
 
 interface CreateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (event: EventItem) => void;
 }
 
 const formatDateToYMD = (date: Date | null): string => {
@@ -19,13 +19,15 @@ const formatDateToYMD = (date: Date | null): string => {
   return `${year}/${month}/${day}`;
 };
 
-export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModalProps) => {
+export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => {
   const [eventName, setEventName] = useState("");
   const [location, setLocation] = useState("");
   const [isRange, setIsRange] = useState(false);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [error, setError] = useState("");
+
+  const createEvent = useEventStore((state) => state.createEvent);
 
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -91,7 +93,7 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
       ...(location.trim() && { location: location.trim() }),
     };
 
-    onCreate(newEvent);
+    createEvent(newEvent);
     onClose();
   };
 

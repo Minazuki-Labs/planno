@@ -1,44 +1,16 @@
-import { useState, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { EventItem } from "./types/event";
+// src/App.tsx
+import { useEffect } from "react";
+import { useEventStore } from "./store/useEventStore";
 import { EventDashboard } from "./pages/EventDashboard";
 import { EventDetail } from "./pages/EventDetail";
 
 export default function App() {
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const { events, selectedEventId, fetchEvents, selectEvent, deleteEvent } =
+    useEventStore();
 
   useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
-    try {
-      const fetchedEvents = await invoke<EventItem[]>("get_events");
-      setEvents(fetchedEvents);
-    } catch (err) {
-      console.error("Failed to fetch events from SQLite:", err);
-    }
-  };
-
-  const handleCreateEvent = async (newEvent: EventItem) => {
-    try {
-      await invoke("create_event", { item: newEvent });
-      await loadEvents();
-    } catch (err) {
-      console.error("Failed to create event:", err);
-    }
-  };
-
-  const handleDeleteEvent = async (eventId: string) => {
-    try {
-      await invoke("delete_event", { id: eventId });
-      setSelectedEventId(null);
-      await loadEvents();
-    } catch (err) {
-      console.error("Failed to delete event:", err);
-    }
-  };
+    fetchEvents();
+  }, [fetchEvents]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) || null;
 
@@ -49,15 +21,11 @@ export default function App() {
       {selectedEvent ? (
         <EventDetail
           event={selectedEvent}
-          onBack={() => setSelectedEventId(null)}
-          onDelete={handleDeleteEvent}
+          onBack={() => selectEvent(null)}
+          onDelete={deleteEvent}
         />
       ) : (
-        <EventDashboard
-          events={events}
-          onSelectEvent={(event) => setSelectedEventId(event.id)}
-          onCreateEvent={handleCreateEvent}
-        />
+        <EventDashboard />
       )}
     </main>
   );
