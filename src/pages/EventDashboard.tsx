@@ -4,16 +4,17 @@ import { EventCard } from "../components/events/EventCard";
 import { CreateEventModal } from "../components/events/CreateEventModal";
 
 interface EventDashboardProps {
+  events: EventItem[];
   onSelectEvent: (event: EventItem) => void;
+  onCreateEvent: (newEvent: EventItem) => void;
 }
 
-export const EventDashboard = ({ onSelectEvent }: EventDashboardProps) => {
-  const [events, setEvents] = useState<EventItem[]>([]);
+export const EventDashboard = ({
+  events,
+  onSelectEvent,
+  onCreateEvent,
+}: EventDashboardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleCreateEvent = (newEvent: EventItem) => {
-    setEvents((prev) => [newEvent, ...prev]);
-  };
 
   return (
     <div className="relative max-w-6xl mx-auto">
@@ -50,7 +51,7 @@ export const EventDashboard = ({ onSelectEvent }: EventDashboardProps) => {
       <CreateEventModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreate={handleCreateEvent}
+        onCreate={onCreateEvent}
       />
     </div>
   );
