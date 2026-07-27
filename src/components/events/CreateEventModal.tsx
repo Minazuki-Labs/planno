@@ -21,19 +21,20 @@ const formatDateToYMD = (date: Date | null): string => {
 
 export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModalProps) => {
   const [eventName, setEventName] = useState("");
+  const [location, setLocation] = useState("");
   const [isRange, setIsRange] = useState(false);
-  const [startDate, setStartDate] = useState<Date | null>(new Date());
-  const [endDate, setEndDate] = useState<Date | null>(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [error, setError] = useState("");
 
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
-    const today = new Date();
     setEventName("");
+    setLocation("");
     setIsRange(false);
-    setStartDate(today);
-    setEndDate(today);
+    setStartDate(null);
+    setEndDate(null);
     setError("");
   };
 
@@ -70,17 +71,16 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
       return;
     }
 
-    if (!startDate) {
-      setError("Please select a start date.");
-      return;
-    }
+    let formattedEventDate = "To Be Confirm";
 
-    const startFormatted = formatDateToYMD(startDate);
-    let formattedEventDate = formatToYMD(startFormatted);
+    if (startDate) {
+      const startFormatted = formatDateToYMD(startDate);
+      formattedEventDate = formatToYMD(startFormatted);
 
-    if (isRange && endDate) {
-      const endFormatted = formatDateToYMD(endDate);
-      formattedEventDate = `${formatToYMD(startFormatted)} - ${formatToYMD(endFormatted)}`;
+      if (isRange && endDate) {
+        const endFormatted = formatDateToYMD(endDate);
+        formattedEventDate = `${formatToYMD(startFormatted)} - ${formatToYMD(endFormatted)}`;
+      }
     }
 
     const newEvent: EventItem = {
@@ -88,6 +88,7 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
       name: eventName.trim(),
       eventDate: formattedEventDate,
       lastEdited: formatToYMDHM(new Date()),
+      ...(location.trim() && { location: location.trim() }),
     };
 
     onCreate(newEvent);
@@ -146,9 +147,23 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
           </div>
 
           <div>
+            <label htmlFor="event-location" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              Location <span className="text-slate-500 lowercase">(optional)</span>
+            </label>
+            <input
+              id="event-location"
+              type="text"
+              placeholder="e.g. Conference Room B / Zoom"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none transition-all"
+            />
+          </div>
+
+          <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Duration Type
+                Duration Type <span className="text-slate-500 lowercase">(optional)</span>
               </label>
             </div>
 
@@ -188,6 +203,8 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
                     selected={startDate}
                     onChange={handleStartDateChange}
                     minDate={new Date()}
+                    isClearable
+                    placeholderText="Select date"
                     dateFormat="yyyy/MM/dd"
                     className={inputStyles}
                     wrapperClassName="w-full"
@@ -202,6 +219,8 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
                     selected={endDate}
                     onChange={setEndDate}
                     minDate={startDate || new Date()}
+                    isClearable
+                    placeholderText="Select date"
                     dateFormat="yyyy/MM/dd"
                     className={inputStyles}
                     wrapperClassName="w-full"
@@ -216,6 +235,8 @@ export const CreateEventModal = ({ isOpen, onClose, onCreate }: CreateEventModal
                   selected={startDate}
                   onChange={handleStartDateChange}
                   minDate={startDate || new Date()}
+                  isClearable
+                  placeholderText="Select date"
                   dateFormat="yyyy/MM/dd"
                   className={inputStyles}
                   wrapperClassName="w-full"
