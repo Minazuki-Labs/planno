@@ -28,7 +28,6 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
   const [error, setError] = useState("");
 
   const createEvent = useEventStore((state) => state.createEvent);
-
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
@@ -73,7 +72,7 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
       return;
     }
 
-    let formattedEventDate = "To Be Confirm";
+    let formattedEventDate = "To Be Confirmed";
 
     if (startDate) {
       const startFormatted = formatDateToYMD(startDate);
@@ -97,39 +96,32 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
     onClose();
   };
 
-  const inputStyles = "w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-3 py-2.5 text-xs text-slate-100 outline-none transition-all cursor-pointer";
+  const inputStyles = "w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all";
 
   return (
     <div 
-      className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-150"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div 
-        className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-6"
+        className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-5"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
       >
-        <div className="flex items-center justify-between">
-          <h2 id="modal-title" className="text-lg font-bold text-white">
-            Create New Event
-          </h2>
-          <button
-            type="button"
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+          <h2 className="text-sm font-semibold text-slate-100">Create Event</h2>
+          <kbd 
             onClick={onClose}
-            aria-label="Close dialog"
-            className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            className="px-1.5 py-0.5 text-[10px] bg-slate-800 text-slate-400 hover:text-slate-200 rounded border border-slate-700 font-mono cursor-pointer"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            ESC
+          </kbd>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="event-name" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              Event Name <span className="text-rose-400">*</span>
+            <label htmlFor="event-name" className="block text-[11px] font-medium text-slate-400 mb-1.5">
+              Event Title <span className="text-rose-400">*</span>
             </label>
             <input
               id="event-name"
@@ -143,40 +135,34 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
               }}
               className={`w-full bg-slate-950 border ${
                 error ? "border-rose-500 focus:ring-rose-500" : "border-slate-800 focus:border-indigo-500 focus:ring-indigo-500"
-              } focus:ring-1 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none transition-all`}
+              } focus:ring-1 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition-all`}
             />
-            {error && <p className="text-xs text-rose-400 mt-1.5">{error}</p>}
+            {error && <p className="text-[11px] text-rose-400 mt-1">{error}</p>}
           </div>
 
           <div>
-            <label htmlFor="event-location" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              Location <span className="text-slate-500 lowercase">(optional)</span>
+            <label htmlFor="event-location" className="block text-[11px] font-medium text-slate-400 mb-1.5">
+              Location <span className="text-slate-600">(Optional)</span>
             </label>
             <input
               id="event-location"
               type="text"
-              placeholder="e.g. Conference Room B / Zoom"
+              placeholder="e.g. Room B / Zoom link"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none transition-all"
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition-all"
             />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Duration Type <span className="text-slate-500 lowercase">(optional)</span>
-              </label>
-            </div>
+            <label className="block text-[11px] font-medium text-slate-400 mb-1.5">Duration</label>
 
-            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl mb-3">
+            <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-950 border border-slate-800 rounded-lg mb-2">
               <button
                 type="button"
                 onClick={() => setIsRange(false)}
-                className={`py-1.5 text-xs font-medium rounded-lg transition-all ${
-                  !isRange 
-                    ? "bg-slate-800 text-white shadow-sm" 
-                    : "text-slate-400 hover:text-slate-200"
+                className={`py-1 text-[11px] font-medium rounded-md transition-all ${
+                  !isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 Single Day
@@ -184,45 +170,37 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
               <button
                 type="button"
                 onClick={() => setIsRange(true)}
-                className={`py-1.5 text-xs font-medium rounded-lg transition-all ${
-                  isRange 
-                    ? "bg-slate-800 text-white shadow-sm" 
-                    : "text-slate-400 hover:text-slate-200"
+                className={`py-1 text-[11px] font-medium rounded-md transition-all ${
+                  isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
-                Multi-Days
+                Date Range
               </button>
             </div>
 
             {isRange ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label htmlFor="start-date" className="block text-[10px] text-slate-400 font-medium uppercase mb-1">
-                    Start Date
-                  </label>
                   <DatePicker
                     id="start-date"
                     selected={startDate}
                     onChange={handleStartDateChange}
                     minDate={new Date()}
                     isClearable
-                    placeholderText="Select date"
+                    placeholderText="Start Date"
                     dateFormat="yyyy/MM/dd"
                     className={inputStyles}
                     wrapperClassName="w-full"
                   />
                 </div>
                 <div>
-                  <label htmlFor="end-date" className="block text-[10px] text-slate-400 font-medium uppercase mb-1">
-                    End Date
-                  </label>
                   <DatePicker
                     id="end-date"
                     selected={endDate}
                     onChange={setEndDate}
                     minDate={startDate || new Date()}
                     isClearable
-                    placeholderText="Select date"
+                    placeholderText="End Date"
                     dateFormat="yyyy/MM/dd"
                     className={inputStyles}
                     wrapperClassName="w-full"
@@ -230,36 +208,33 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
                 </div>
               </div>
             ) : (
-              <div>
-                <label htmlFor="single-date" className="sr-only">Date</label>
-                <DatePicker
-                  id="single-date"
-                  selected={startDate}
-                  onChange={handleStartDateChange}
-                  minDate={startDate || new Date()}
-                  isClearable
-                  placeholderText="Select date"
-                  dateFormat="yyyy/MM/dd"
-                  className={inputStyles}
-                  wrapperClassName="w-full"
-                />
-              </div>
+              <DatePicker
+                id="single-date"
+                selected={startDate}
+                onChange={handleStartDateChange}
+                minDate={new Date()}
+                isClearable
+                placeholderText="Select Event Date"
+                dateFormat="yyyy/MM/dd"
+                className={inputStyles}
+                wrapperClassName="w-full"
+              />
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/60">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800/80">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-slate-200 rounded-xl hover:bg-slate-800/50 transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 cursor-pointer"
+              className="px-3.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-lg transition-all shadow-sm"
             >
-              Create Event
+              Create
             </button>
           </div>
         </form>
