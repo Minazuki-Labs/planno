@@ -1,13 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEventStore } from "../store/useEventStore";
 import { EventCard } from "../components/events/EventCard";
 import { CreateEventModal } from "../components/events/CreateEventModal";
 
 export const EventDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMac, setIsMac] = useState(false);
 
   const events = useEventStore((state) => state.events);
   const selectEvent = useEventStore((state) => state.selectEvent);
+
+  useEffect(() => {
+    setIsMac(navigator.userAgent.toUpperCase().includes("MAC"));
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        setIsModalOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <div className="flex flex-col h-full max-w-6xl mx-auto px-6 py-4">
@@ -26,8 +43,8 @@ export const EventDashboard = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           <span>New Event</span>
-          <kbd className="hidden sm:inline-block ml-1.5 px-1.5 py-0.5 text-[10px] bg-indigo-700/50 text-indigo-200 rounded border border-indigo-400/30 font-mono">
-            ⌘N
+          <kbd className="hidden sm:inline-flex items-center ml-1 px-1.5 py-0.5 text-[10px] bg-slate-950/40 text-indigo-100 rounded border border-white/20 font-mono font-medium shadow-inner">
+            {isMac ? "⌘N" : "Ctrl+N"}
           </kbd>
         </button>
       </div>
