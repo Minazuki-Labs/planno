@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useEventStore } from "./store/useEventStore";
 import { EventDashboard } from "./pages/EventDashboard";
-import { EventDetail } from "./pages/EventDetail";
+import { EventDetail } from "./pages/EventContainer";
 
 export default function App() {
   const { events, selectedEventId, fetchEvents, selectEvent, deleteEvent } =
