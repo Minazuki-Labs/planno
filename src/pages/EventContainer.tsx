@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { EventItem } from "../types/event";
+import { DetailsTab } from "../components/events/tabs/DetailsTab";
+import { ScheduleTab } from "../components/events/tabs/ScheduleTab";
+import { BudgetTab } from "../components/events/tabs/BudgetTab";
+import { CommitteeTab } from "../components/events/tabs/CommitteeTab";
 
-interface EventDetailProps {
+interface EventViewProps {
   event: EventItem;
   onBack: () => void;
   onDelete: (eventId: string) => void;
 }
 
-export const EventDetail = ({ event, onBack, onDelete }: EventDetailProps) => {
+type TabType = "schedule" | "budget" | "committee" | "details";
+
+export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
+  const [activeTab, setActiveTab] = useState<TabType>("schedule");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const confirmDelete = () => {
@@ -15,8 +22,16 @@ export const EventDetail = ({ event, onBack, onDelete }: EventDetailProps) => {
     onBack();
   };
 
+  const tabs: { id: TabType; label: string }[] = [
+    { id: "schedule", label: "Schedule" },
+    { id: "budget", label: "Budget" },
+    { id: "committee", label: "Committee" },
+    { id: "details", label: "Details" },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Top Header & Actions */}
       <div className="flex items-center justify-between">
         <button
           type="button"
@@ -35,24 +50,29 @@ export const EventDetail = ({ event, onBack, onDelete }: EventDetailProps) => {
         </button>
       </div>
 
-      <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-8 space-y-6 backdrop-blur-md">
-        <h1 className="text-3xl font-bold text-slate-100">{event.name}</h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-800">
-          <div>
-            <p className="text-xs uppercase text-slate-400 font-semibold mb-1">Location</p>
-            <p className="text-sm text-slate-200">{event.location || "N/A"}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase text-slate-400 font-semibold mb-1">Date</p>
-            <p className="text-sm text-slate-200">{event.eventDate}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase text-slate-400 font-semibold mb-1">Last Edited</p>
-            <p className="text-sm text-slate-200">{event.lastEdited}</p>
-          </div>
-        </div>
+      {/* Navigation Bar */}
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+              activeTab === tab.id
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
+
+      {/* Tab Views */}
+      {activeTab === "details" && <DetailsTab event={event} />}
+      {activeTab === "schedule" && <ScheduleTab />}
+      {activeTab === "budget" && <BudgetTab />}
+      {activeTab === "committee" && <CommitteeTab />}
 
       {/* Confirmation Modal */}
       {showConfirmModal && (

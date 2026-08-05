@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useEventStore } from "./store/useEventStore";
 import { EventDashboard } from "./pages/EventDashboard";
-import { EventDetail } from "./pages/EventContainer";
+import { EventView } from "./pages/EventContainer";
 
 export default function App() {
   const { events, selectedEventId, fetchEvents, selectEvent, deleteEvent } =
@@ -19,7 +19,7 @@ export default function App() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950 pointer-events-none" />
 
       {selectedEvent ? (
-        <EventDetail
+        <EventView
           event={selectedEvent}
           onBack={() => selectEvent(null)}
           onDelete={deleteEvent}
