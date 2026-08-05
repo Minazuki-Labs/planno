@@ -1,8 +1,7 @@
-// src/App.tsx
 import { useEffect } from "react";
 import { useEventStore } from "./store/useEventStore";
 import { EventDashboard } from "./pages/EventDashboard";
-import { EventView } from "./pages/EventContainer";
+import { EventView } from "./pages/EventView";
 
 export default function App() {
   const { events, selectedEventId, fetchEvents, selectEvent, deleteEvent } =
