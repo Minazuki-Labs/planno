@@ -60,18 +60,38 @@ export const EventDashboard = () => {
     if (!matchesSearch) return false;
 
     if (startDate || endDate) {
-      const eventTime = new Date(event.eventDate).getTime();
-      
+      if (!event.eventDate || event.eventDate === "To Be Confirmed") return false;
+
+      const parseToMidnight = (dateVal: string | Date) => {
+        if (typeof dateVal === "string") {
+          const cleaned = dateVal.trim().replace(/-/g, "/");
+          const parts = cleaned.split("/").map(Number);
+          if (parts.length === 3 && !parts.some(isNaN)) {
+            return new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+          }
+        }
+        const d = new Date(dateVal);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      };
+
+      const rawDateStr = String(event.eventDate);
+      const rangeParts = rawDateStr.includes(" - ") 
+        ? rawDateStr.split(" - ") 
+        : [rawDateStr, rawDateStr];
+
+      const eventStartTime = parseToMidnight(rangeParts[0]);
+      const eventEndTime = parseToMidnight(rangeParts[1]);
+
+      if (isNaN(eventStartTime) || isNaN(eventEndTime)) return false;
+
       if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        if (eventTime < start.getTime()) return false;
+        const filterStartTime = parseToMidnight(startDate);
+        if (eventEndTime < filterStartTime) return false;
       }
 
       if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        if (eventTime > end.getTime()) return false;
+        const filterEndTime = parseToMidnight(endDate);
+        if (eventStartTime > filterEndTime) return false;
       }
     }
 
