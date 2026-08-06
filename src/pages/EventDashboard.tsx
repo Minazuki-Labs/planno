@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 import { useEventStore } from "../store/useEventStore";
 import { EventCard } from "../components/events/EventCard";
 import { CreateEventModal } from "../components/events/CreateEventModal";
@@ -7,12 +10,27 @@ export const EventDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMac, setIsMac] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  const filterRef = useRef<HTMLDivElement>(null);
   const events = useEventStore((state) => state.events);
   const selectEvent = useEventStore((state) => state.selectEvent);
 
   useEffect(() => {
     setIsMac(navigator.userAgent.toUpperCase().includes("MAC"));
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -27,12 +45,55 @@ export const EventDashboard = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const handleDateRangeChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+    setStartDate(start);
+    setEndDate(end);
+  };
+
   const filteredEvents = events.filter((event) => {
     const query = searchQuery.toLowerCase();
     const nameMatch = event.name?.toLowerCase().includes(query);
     const locationMatch = event.location?.toLowerCase().includes(query);
-    return nameMatch || locationMatch;
+    const matchesSearch = nameMatch || locationMatch;
+
+    if (!matchesSearch) return false;
+
+    if (startDate || endDate) {
+      const eventTime = new Date(event.eventDate).getTime();
+      
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (eventTime < start.getTime()) return false;
+      }
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (eventTime > end.getTime()) return false;
+      }
+    }
+
+    return true;
   });
+
+  const hasDateFilter = Boolean(startDate || endDate);
+  const hasActiveFilters = searchQuery || hasDateFilter;
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStartDate(null);
+    setEndDate(null);
+  };
+
+  const formatDateLabel = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="flex flex-col h-full max-w-6xl mx-auto px-6 py-4">
@@ -42,7 +103,7 @@ export const EventDashboard = () => {
           <p className="text-xs text-slate-400">Manage and schedule your event calendar</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-64">
             <svg
               className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -76,6 +137,68 @@ export const EventDashboard = () => {
             )}
           </div>
 
+          <div className="relative" ref={filterRef}>
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen((prev) => !prev)}
+              className={`relative flex items-center gap-2 px-3 py-2 bg-slate-900/80 border text-xs font-medium rounded-lg transition-all ${
+                hasDateFilter
+                  ? "border-indigo-500/80 text-indigo-400 bg-indigo-950/20"
+                  : "border-slate-800 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
+              </svg>
+
+              {hasDateFilter && (
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              )}
+            </button>
+
+            {isFilterOpen && (
+              <div className="absolute right-0 mt-2 bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-2xl z-40 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <span className="text-xs font-semibold text-slate-200">Select Date Range</span>
+                  {hasDateFilter && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStartDate(null);
+                        setEndDate(null);
+                      }}
+                      className="text-[11px] text-slate-400 hover:text-indigo-400 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex justify-center">
+                  <DatePicker
+                    selectsRange
+                    startDate={startDate}
+                    endDate={endDate}
+                    onChange={handleDateRangeChange}
+                    inline
+                  />
+                </div>
+
+                {startDate && (
+                  <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-800 text-center">
+                    {formatDateLabel(startDate)}
+                    {endDate ? ` – ${formatDateLabel(endDate)}` : " (Select end date)"}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
@@ -100,14 +223,21 @@ export const EventDashboard = () => {
             </svg>
           </div>
           <h3 className="text-sm font-semibold text-slate-200">
-            {searchQuery ? "No matching events" : "No events found"}
+            {hasActiveFilters ? "No matching events" : "No events found"}
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xs">
-            {searchQuery
-              ? `No events found matching "${searchQuery}". Try a different search term.`
+            {hasActiveFilters
+              ? "No events found matching your filter criteria. Try adjusting your search term or date range."
               : "Get started by creating your first scheduled event."}
           </p>
-          {!searchQuery && (
+          {hasActiveFilters ? (
+            <button
+              onClick={clearFilters}
+              className="mt-4 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium rounded-lg transition-colors"
+            >
+              Clear Filters
+            </button>
+          ) : (
             <button
               onClick={() => setIsModalOpen(true)}
               className="mt-4 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium rounded-lg transition-colors"
