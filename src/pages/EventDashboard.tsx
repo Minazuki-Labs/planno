@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 import { useEventStore } from "../store/useEventStore";
 import { EventCard } from "../components/events/EventCard";
 import { CreateEventModal } from "../components/events/CreateEventModal";
+import { DatePickerField } from "../components/common/DatePickerField";
 
 export const EventDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,12 +43,6 @@ export const EventDashboard = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  const handleDateRangeChange = (dates: [Date | null, Date | null]) => {
-    const [start, end] = dates;
-    setStartDate(start);
-    setEndDate(end);
-  };
 
   const setPresetToday = () => {
     const now = new Date();
@@ -245,12 +238,14 @@ export const EventDashboard = () => {
                 </div>
 
                 <div className="flex justify-center pt-1">
-                  <DatePicker
-                    selectsRange
+                  <DatePickerField
+                    inline
                     startDate={startDate}
                     endDate={endDate}
-                    onChange={handleDateRangeChange}
-                    inline
+                    onChange={(start, end) => {
+                      setStartDate(start);
+                      setEndDate(end);
+                    }}
                   />
                 </div>
               </div>

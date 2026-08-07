@@ -1,7 +1,7 @@
 import { useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+
 import { EventItem } from "../../../types/event";
+import { DatePickerField } from "../../common/DatePickerField";
 
 interface DetailsTabProps {
   event: EventItem;
@@ -49,13 +49,6 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
       setStartDate(null);
       setEndDate(null);
       setIsRange(false);
-    }
-  };
-
-  const handleStartDateChange = (date: Date | null) => {
-    setStartDate(date);
-    if (date && endDate && date > endDate) {
-      setEndDate(date);
     }
   };
 
@@ -115,7 +108,6 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
           )}
         </div>
 
-        {/* Top Actions: Edit / Save / Cancel */}
         <div className="flex items-center space-x-2 pt-1 flex-shrink-0">
           {isEditing ? (
             <>
@@ -174,62 +166,17 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
             Date
           </p>
           {isEditing ? (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-900 border border-slate-800 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setIsRange(false)}
-                  className={`py-0.5 text-[10px] font-medium rounded transition-all ${
-                    !isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Single
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsRange(true)}
-                  className={`py-0.5 text-[10px] font-medium rounded transition-all ${
-                    isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  Range
-                </button>
-              </div>
-
-              {isRange ? (
-                <div className="space-y-1.5">
-                  <DatePicker
-                    selected={startDate}
-                    onChange={handleStartDateChange}
-                    isClearable
-                    placeholderText="Start Date"
-                    dateFormat="yyyy/MM/dd"
-                    className={inputStyles}
-                    wrapperClassName="w-full"
-                  />
-                  <DatePicker
-                    selected={endDate}
-                    onChange={setEndDate}
-                    minDate={startDate || undefined}
-                    isClearable
-                    placeholderText="End Date"
-                    dateFormat="yyyy/MM/dd"
-                    className={inputStyles}
-                    wrapperClassName="w-full"
-                  />
-                </div>
-              ) : (
-                <DatePicker
-                  selected={startDate}
-                  onChange={handleStartDateChange}
-                  isClearable
-                  placeholderText="Select Date"
-                  dateFormat="yyyy/MM/dd"
-                  className={inputStyles}
-                  wrapperClassName="w-full"
-                />
-              )}
-            </div>
+            <DatePickerField
+              startDate={startDate}
+              endDate={endDate}
+              isRange={isRange}
+              onRangeToggle={setIsRange}
+              onChange={(start, end) => {
+                setStartDate(start);
+                setEndDate(end);
+              }}
+              className={inputStyles}
+            />
           ) : (
             <p className="text-sm font-medium text-slate-200">{event.eventDate}</p>
           )}

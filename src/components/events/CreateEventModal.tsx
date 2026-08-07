@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, SubmitEvent } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 import { EventItem } from "../../types/event";
 import { formatToYMD, formatToYMDHM } from "../../utils/date";
 import { useEventStore } from "../../store/useEventStore";
+import { DatePickerField } from "../common/DatePickerField";
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -55,13 +54,6 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  const handleStartDateChange = (date: Date | null) => {
-    setStartDate(date);
-    if (date && endDate && date > endDate) {
-      setEndDate(date);
-    }
-  };
-
   if (!isOpen) return null;
 
   const handleSubmit = (e: SubmitEvent<HTMLFormElement>) => {
@@ -95,8 +87,6 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
     createEvent(newEvent);
     onClose();
   };
-
-  const inputStyles = "w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all";
 
   return (
     <div 
@@ -156,70 +146,18 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
 
           <div>
             <label className="block text-[11px] font-medium text-slate-400 mb-1.5">Duration</label>
-
-            <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-950 border border-slate-800 rounded-lg mb-2">
-              <button
-                type="button"
-                onClick={() => setIsRange(false)}
-                className={`py-1 text-[11px] font-medium rounded-md transition-all ${
-                  !isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Single Day
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsRange(true)}
-                className={`py-1 text-[11px] font-medium rounded-md transition-all ${
-                  isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Date Range
-              </button>
-            </div>
-
-            {isRange ? (
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <DatePicker
-                    id="start-date"
-                    selected={startDate}
-                    onChange={handleStartDateChange}
-                    minDate={new Date()}
-                    isClearable
-                    placeholderText="Start Date"
-                    dateFormat="yyyy/MM/dd"
-                    className={inputStyles}
-                    wrapperClassName="w-full"
-                  />
-                </div>
-                <div>
-                  <DatePicker
-                    id="end-date"
-                    selected={endDate}
-                    onChange={setEndDate}
-                    minDate={startDate || new Date()}
-                    isClearable
-                    placeholderText="End Date"
-                    dateFormat="yyyy/MM/dd"
-                    className={inputStyles}
-                    wrapperClassName="w-full"
-                  />
-                </div>
-              </div>
-            ) : (
-              <DatePicker
-                id="single-date"
-                selected={startDate}
-                onChange={handleStartDateChange}
-                minDate={new Date()}
-                isClearable
-                placeholderText="Select Event Date"
-                dateFormat="yyyy/MM/dd"
-                className={inputStyles}
-                wrapperClassName="w-full"
-              />
-            )}
+            <DatePickerField
+              startDate={startDate}
+              endDate={endDate}
+              isRange={isRange}
+              minDate={new Date()}
+              onRangeToggle={setIsRange}
+              onChange={(start, end) => {
+                setStartDate(start);
+                setEndDate(end);
+              }}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
+            />
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800/80">
