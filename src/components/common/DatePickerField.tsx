@@ -20,14 +20,10 @@ export const DatePickerField = ({
   minDate,
   onChange,
   onRangeToggle,
-  className = "w-full bg-slate-900 border border-slate-700/80 focus:border-indigo-500 rounded-lg px-2.5 py-1 text-sm text-slate-200",
+  className = "w-full min-h-[38px] bg-slate-900 border border-slate-700/80 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs font-medium text-slate-200 outline-none transition-all",
 }: DatePickerFieldProps) => {
   const handleStartDateChange = (date: Date | null) => {
-    let newEnd = endDate;
-    if (date && endDate && date > endDate) {
-      newEnd = date;
-    }
-    onChange(date, newEnd);
+    onChange(date, null);
   };
 
   const handleRangeChange = (dates: [Date | null, Date | null]) => {
@@ -50,12 +46,15 @@ export const DatePickerField = ({
   return (
     <div className="space-y-2">
       {onRangeToggle && (
-        <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-950 border border-slate-800 rounded-lg">
+        <div className="grid grid-cols-2 gap-1 p-1 bg-slate-950 border border-slate-800 rounded-lg">
           <button
             type="button"
-            onClick={() => onRangeToggle(false)}
-            className={`py-0.5 text-[10px] font-medium rounded transition-all ${
-              !isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
+            onClick={() => {
+              onRangeToggle(false);
+              if (endDate) onChange(startDate, null);
+            }}
+            className={`py-1 text-[11px] font-medium rounded transition-all min-h-[28px] ${
+              !isRange ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
             }`}
           >
             Single Day
@@ -63,8 +62,8 @@ export const DatePickerField = ({
           <button
             type="button"
             onClick={() => onRangeToggle(true)}
-            className={`py-0.5 text-[10px] font-medium rounded transition-all ${
-              isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
+            className={`py-1 text-[11px] font-medium rounded transition-all min-h-[28px] ${
+              isRange ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
             }`}
           >
             Date Range
@@ -72,41 +71,33 @@ export const DatePickerField = ({
         </div>
       )}
 
-      {isRange ? (
-        <div className="space-y-1.5 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-2">
+      <div className="w-full relative min-h-[38px]">
+        {isRange ? (
+          <DatePicker
+            selectsRange
+            startDate={startDate}
+            endDate={endDate}
+            onChange={handleRangeChange}
+            minDate={minDate}
+            isClearable
+            placeholderText="Select range (Start → End)"
+            dateFormat="yyyy/MM/dd"
+            className={className}
+            wrapperClassName="w-full"
+          />
+        ) : (
           <DatePicker
             selected={startDate}
             onChange={handleStartDateChange}
             minDate={minDate}
             isClearable
-            placeholderText="Start Date"
+            placeholderText="Select Date"
             dateFormat="yyyy/MM/dd"
             className={className}
             wrapperClassName="w-full"
           />
-          <DatePicker
-            selected={endDate}
-            onChange={(date: Date | null) => onChange(startDate, date)}
-            minDate={startDate || minDate}
-            isClearable
-            placeholderText="End Date"
-            dateFormat="yyyy/MM/dd"
-            className={className}
-            wrapperClassName="w-full"
-          />
-        </div>
-      ) : (
-        <DatePicker
-          selected={startDate}
-          onChange={handleStartDateChange}
-          minDate={minDate}
-          isClearable
-          placeholderText="Select Date"
-          dateFormat="yyyy/MM/dd"
-          className={className}
-          wrapperClassName="w-full"
-        />
-      )}
+        )}
+      </div>
     </div>
   );
 };

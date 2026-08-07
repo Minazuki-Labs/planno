@@ -123,7 +123,7 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
                 setEventName(e.target.value);
                 if (error) setError("");
               }}
-              className={`w-full bg-slate-950 border ${
+              className={`w-full min-h-[38px] bg-slate-950 border ${
                 error ? "border-rose-500 focus:ring-rose-500" : "border-slate-800 focus:border-indigo-500 focus:ring-indigo-500"
               } focus:ring-1 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition-all`}
             />
@@ -140,7 +140,7 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
               placeholder="e.g. Room B / Zoom link"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition-all"
+              className="w-full min-h-[38px] bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition-all"
             />
           </div>
 
@@ -156,7 +156,7 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
                 setStartDate(start);
                 setEndDate(end);
               }}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
+              className="w-full min-h-[38px] bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
             />
           </div>
 
@@ -164,13 +164,13 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
+              className="px-3.5 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors min-h-[36px]"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-3.5 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-lg transition-all shadow-sm"
+              className="px-4 py-2 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-lg transition-all shadow-sm min-h-[36px]"
             >
               Create
             </button>
