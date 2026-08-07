@@ -49,3 +49,15 @@ pub fn delete_event(state: State<DbState>, id: String) -> Result<(), String> {
 
     Ok(())
 }
+
+#[tauri::command]
+pub fn update_event(state: State<DbState>, item: EventItem) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE events SET name = ?1, event_date = ?2, last_edited = ?3, location = ?4 WHERE id = ?5",
+        params![item.name, item.event_date, item.last_edited, item.location, item.id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}

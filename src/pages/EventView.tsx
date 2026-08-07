@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+
 import { EventItem } from "../types/event";
 import { DetailsTab } from "../components/events/tabs/DetailsTab";
 import { ScheduleTab } from "../components/events/tabs/ScheduleTab";
@@ -28,6 +30,14 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
     { id: "committee", label: "Committee" },
     { id: "details", label: "Details" },
   ];
+
+  const handleUpdateEvent = async (updatedEvent: EventItem) => {
+    try {
+      await invoke("update_event", { item: updatedEvent });
+    } catch (error) {
+      console.error("Failed to update event:", error);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -64,7 +74,8 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
         {activeTab === "details" && (
           <DetailsTab 
             event={event} 
-            onDelete={() => setShowConfirmModal(true)} 
+            onDelete={() => setShowConfirmModal(true)}
+            onUpdate={handleUpdateEvent} 
           />
         )}
         {activeTab === "schedule" && <ScheduleTab />}

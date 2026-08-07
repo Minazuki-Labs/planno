@@ -3,5 +3,5 @@ export interface EventItem {
   name: string;
   eventDate: string;
   lastEdited: string;
-  location?: string;
+  location?: string | null;
 }

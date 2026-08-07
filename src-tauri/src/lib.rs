@@ -26,7 +26,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::events::get_events,
             commands::events::create_event,
-            commands::events::delete_event
+            commands::events::delete_event,
+            commands::events::update_event
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
