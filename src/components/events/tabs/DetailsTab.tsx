@@ -1,4 +1,6 @@
 import { useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { EventItem } from "../../../types/event";
 
 interface DetailsTabProps {
@@ -7,20 +9,74 @@ interface DetailsTabProps {
   onUpdate: (updatedEvent: EventItem) => void;
 }
 
+const formatDateToYMD = (date: Date | null): string => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
+};
+
 export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: event.name,
     location: event.location || "",
-    eventDate: event.eventDate,
   });
 
+  const [isRange, setIsRange] = useState(false);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setFormData({
+      name: event.name,
+      location: event.location || "",
+    });
+
+    if (event.eventDate && event.eventDate !== "To Be Confirmed") {
+      const dates = event.eventDate.split(" - ");
+      if (dates[0]) setStartDate(new Date(dates[0]));
+      if (dates[1]) {
+        setEndDate(new Date(dates[1]));
+        setIsRange(true);
+      } else {
+        setEndDate(null);
+        setIsRange(false);
+      }
+    } else {
+      setStartDate(null);
+      setEndDate(null);
+      setIsRange(false);
+    }
+  };
+
+  const handleStartDateChange = (date: Date | null) => {
+    setStartDate(date);
+    if (date && endDate && date > endDate) {
+      setEndDate(date);
+    }
+  };
+
   const handleSave = () => {
+    let formattedEventDate = "To Be Confirmed";
+
+    if (startDate) {
+      const startFormatted = formatDateToYMD(startDate);
+      formattedEventDate = startFormatted;
+
+      if (isRange && endDate) {
+        const endFormatted = formatDateToYMD(endDate);
+        formattedEventDate = `${startFormatted} - ${endFormatted}`;
+      }
+    }
+
     const updatedEvent: EventItem = {
       ...event,
       name: formData.name,
       location: formData.location.trim() ? formData.location : null,
-      eventDate: formData.eventDate,
+      eventDate: formattedEventDate,
       lastEdited: new Date().toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -33,13 +89,11 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: event.name,
-      location: event.location || "",
-      eventDate: event.eventDate,
-    });
     setIsEditing(false);
   };
+
+  const inputStyles =
+    "w-full bg-slate-900 border border-slate-700/80 focus:border-indigo-500 focus:outline-none rounded-lg px-2.5 py-1 text-sm font-medium text-slate-200";
 
   return (
     <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 space-y-6 backdrop-blur-md shadow-xl">
@@ -62,20 +116,20 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
         </div>
 
         {/* Top Actions: Edit / Save / Cancel */}
-        <div className="flex items-center space-x-2 pt-1">
+        <div className="flex items-center space-x-2 pt-1 flex-shrink-0">
           {isEditing ? (
             <>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-3.5 py-1.5 text-xs font-semibold bg-slate-800/60 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-700/50 transition-all cursor-pointer"
+                className="px-3.5 py-1.5 text-xs font-semibold bg-slate-800/60 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-700/50 transition-all cursor-pointer whitespace-nowrap"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                className="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition-all cursor-pointer"
+                className="px-3.5 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 transition-all cursor-pointer whitespace-nowrap"
               >
                 Save
               </button>
@@ -83,8 +137,8 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
           ) : (
             <button
               type="button"
-              onClick={() => setIsEditing(true)}
-              className="px-3.5 py-1.5 text-xs font-semibold bg-indigo-500/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 rounded-xl transition-all cursor-pointer shadow-sm"
+              onClick={handleStartEdit}
+              className="px-3.5 py-1.5 text-xs font-semibold bg-indigo-500/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 rounded-xl transition-all cursor-pointer shadow-sm whitespace-nowrap"
             >
               Edit Details
             </button>
@@ -104,7 +158,7 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
               type="text"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700/80 focus:border-indigo-500 focus:outline-none rounded-lg px-2.5 py-1 text-sm font-medium text-slate-200"
+              className={inputStyles}
               placeholder="e.g. San Francisco"
             />
           ) : (
@@ -120,12 +174,62 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
             Date
           </p>
           {isEditing ? (
-            <input
-              type="text"
-              value={formData.eventDate}
-              onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700/80 focus:border-indigo-500 focus:outline-none rounded-lg px-2.5 py-1 text-sm font-medium text-slate-200"
-            />
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-1 p-0.5 bg-slate-900 border border-slate-800 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setIsRange(false)}
+                  className={`py-0.5 text-[10px] font-medium rounded transition-all ${
+                    !isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Single
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsRange(true)}
+                  className={`py-0.5 text-[10px] font-medium rounded transition-all ${
+                    isRange ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Range
+                </button>
+              </div>
+
+              {isRange ? (
+                <div className="space-y-1.5">
+                  <DatePicker
+                    selected={startDate}
+                    onChange={handleStartDateChange}
+                    isClearable
+                    placeholderText="Start Date"
+                    dateFormat="yyyy/MM/dd"
+                    className={inputStyles}
+                    wrapperClassName="w-full"
+                  />
+                  <DatePicker
+                    selected={endDate}
+                    onChange={setEndDate}
+                    minDate={startDate || undefined}
+                    isClearable
+                    placeholderText="End Date"
+                    dateFormat="yyyy/MM/dd"
+                    className={inputStyles}
+                    wrapperClassName="w-full"
+                  />
+                </div>
+              ) : (
+                <DatePicker
+                  selected={startDate}
+                  onChange={handleStartDateChange}
+                  isClearable
+                  placeholderText="Select Date"
+                  dateFormat="yyyy/MM/dd"
+                  className={inputStyles}
+                  wrapperClassName="w-full"
+                />
+              )}
+            </div>
           ) : (
             <p className="text-sm font-medium text-slate-200">{event.eventDate}</p>
           )}

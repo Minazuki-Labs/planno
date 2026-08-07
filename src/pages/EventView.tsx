@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 
 import { EventItem } from "../types/event";
+import { useEventStore } from "../store/useEventStore";
 import { DetailsTab } from "../components/events/tabs/DetailsTab";
 import { ScheduleTab } from "../components/events/tabs/ScheduleTab";
 import { BudgetTab } from "../components/events/tabs/BudgetTab";
@@ -19,6 +19,8 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("schedule");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  const updateEvent = useEventStore((state) => state.updateEvent);
+
   const confirmDelete = () => {
     onDelete(event.id);
     onBack();
@@ -32,11 +34,7 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
   ];
 
   const handleUpdateEvent = async (updatedEvent: EventItem) => {
-    try {
-      await invoke("update_event", { item: updatedEvent });
-    } catch (error) {
-      console.error("Failed to update event:", error);
-    }
+    await updateEvent(updatedEvent);
   };
 
   return (

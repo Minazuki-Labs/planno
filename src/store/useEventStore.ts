@@ -13,6 +13,7 @@ interface EventState {
   selectEvent: (id: string | null) => void;
   createEvent: (newEvent: EventItem) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
+  updateEvent: (updatedEvent: EventItem) => Promise<void>;
 }
 
 export const useEventStore = create<EventState>((set, get) => ({
@@ -61,6 +62,23 @@ export const useEventStore = create<EventState>((set, get) => ({
     } catch (err) {
       console.error("Failed to delete event from database:", err);
       set({ events: previousEvents, error: "Failed to delete event" });
+    }
+  },
+
+  updateEvent: async (updatedEvent: EventItem) => {
+    const previousEvents = get().events;
+
+    set({
+      events: previousEvents.map((e) =>
+        e.id === updatedEvent.id ? updatedEvent : e
+      ),
+    });
+
+    try {
+      await invoke("update_event", { item: updatedEvent });
+    } catch (err) {
+      console.error("Failed to update event in database:", err);
+      set({ events: previousEvents, error: "Failed to update event" });
     }
   },
 }));
