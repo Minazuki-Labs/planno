@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, SubmitEvent } from "react";
 
 import { EventItem } from "../../types/event";
-import { formatToYMD, formatToYMDHM } from "../../utils/date";
+import { formatToYMD } from "../../utils/date";
 import { useEventStore } from "../../store/useEventStore";
 import { DatePickerField } from "../common/DatePickerField";
 
@@ -80,7 +80,7 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
       id: crypto.randomUUID(),
       name: eventName.trim(),
       eventDate: formattedEventDate,
-      lastEdited: formatToYMDHM(new Date()),
+      lastEdited: new Date().toISOString(),
       ...(location.trim() && { location: location.trim() }),
     };
 

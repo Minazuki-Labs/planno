@@ -16,6 +16,19 @@ const formatDateToYMD = (date: Date | null): string => {
   return `${year}/${month}/${day}`;
 };
 
+const formatTimestampToDisplay = (timestampStr: string): string => {
+  const date = new Date(timestampStr);
+  if (isNaN(date.getTime())) return timestampStr;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -71,11 +84,7 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
       name: formData.name,
       location: formData.location.trim() ? formData.location : null,
       eventDate: formattedEventDate,
-      lastEdited: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
+      lastEdited: new Date().toISOString(), // Standard ISO-8601 Timestamp
     };
 
     onUpdate(updatedEvent);
@@ -177,7 +186,9 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
           <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
             Last Edited
           </p>
-          <p className="text-sm font-semibold text-slate-200">{event.lastEdited}</p>
+          <p className="text-sm font-semibold text-slate-200">
+            {formatTimestampToDisplay(event.lastEdited)}
+          </p>
         </div>
       </div>
 
