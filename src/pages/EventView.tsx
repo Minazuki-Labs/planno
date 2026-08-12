@@ -77,7 +77,7 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
             onUpdate={handleUpdateEvent} 
           />
         )}
-        {activeTab === "schedule" && <ScheduleTab />}
+        {activeTab === "schedule" && <ScheduleTab event={event} />}
         {activeTab === "budget" && <BudgetTab />}
         {activeTab === "committee" && <CommitteeTab />}
       </main>

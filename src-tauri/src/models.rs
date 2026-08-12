@@ -2,17 +2,6 @@ use serde::{Deserialize, Serialize};
 use rusqlite::Connection;
 use std::sync::Mutex;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct EventItem {
-    pub id: String,
-    pub name: String,
-    #[serde(rename = "eventDate")]
-    pub event_date: String,
-    #[serde(rename = "lastEdited")]
-    pub last_edited: String,
-    pub location: Option<String>,
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EventItem {

@@ -1,30 +1,36 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
-import { EventItem } from "../types/event";
+import { EventItem, ActivityItem } from "../types/event";
 
 interface EventState {
   events: EventItem[];
+  activities: ActivityItem[];
   selectedEventId: string | null;
   loading: boolean;
   error: string | null;
 
-  // Actions
+  // Event Actions
   fetchEvents: () => Promise<void>;
   selectEvent: (id: string | null) => void;
   createEvent: (newEvent: EventItem) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
   updateEvent: (updatedEvent: EventItem) => Promise<void>;
+
+  // Activity Actions
+  fetchActivities: (eventId: string) => Promise<void>;
+  createActivity: (activity: ActivityItem) => Promise<void>;
+  deleteActivity: (id: string) => Promise<void>;
 }
 
 export const useEventStore = create<EventState>((set, get) => ({
   events: [],
+  activities: [],
   selectedEventId: null,
   loading: false,
   error: null,
 
   selectEvent: (id) => set({ selectedEventId: id }),
 
-  // Fetch all events from SQLite
   fetchEvents: async () => {
     set({ loading: true, error: null });
     try {
@@ -79,6 +85,38 @@ export const useEventStore = create<EventState>((set, get) => ({
     } catch (err) {
       console.error("Failed to update event in database:", err);
       set({ events: previousEvents, error: "Failed to update event" });
+    }
+  },
+
+  // Schedule Activity handlers
+  fetchActivities: async (eventId: string) => {
+    try {
+      const activities = await invoke<ActivityItem[]>("get_activities", { eventId });
+      set({ activities });
+    } catch (err) {
+      console.error("Failed to fetch activities:", err);
+    }
+  },
+
+  createActivity: async (activity: ActivityItem) => {
+    const previous = get().activities;
+    set({ activities: [...previous, activity] });
+    try {
+      await invoke("create_activity", { item: activity });
+    } catch (err) {
+      console.error("Failed to create activity:", err);
+      set({ activities: previous });
+    }
+  },
+
+  deleteActivity: async (id: string) => {
+    const previous = get().activities;
+    set({ activities: previous.filter((a) => a.id !== id) });
+    try {
+      await invoke("delete_activity", { id });
+    } catch (err) {
+      console.error("Failed to delete activity:", err);
+      set({ activities: previous });
     }
   },
 }));
