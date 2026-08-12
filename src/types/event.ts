@@ -5,3 +5,13 @@ export interface EventItem {
   lastEdited: string;
   location?: string | null;
 }
+
+export interface ActivityItem {
+  id: string;
+  eventId: string;
+  title: string;
+  dayDate: string;
+  startTime: string;
+  endTime: string;
+  color: string;
+}

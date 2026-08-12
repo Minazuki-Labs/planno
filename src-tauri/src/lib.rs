@@ -27,7 +27,11 @@ pub fn run() {
             commands::events::get_events,
             commands::events::create_event,
             commands::events::delete_event,
-            commands::events::update_event
+            commands::events::update_event,
+
+            commands::events::get_activities,
+            commands::events::create_activity,
+            commands::events::delete_activity,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
