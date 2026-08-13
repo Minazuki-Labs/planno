@@ -38,7 +38,7 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 space-y-6">
       {/* Navigation Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800/80 pb-3">
         <button
