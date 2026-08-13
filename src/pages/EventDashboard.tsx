@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 import { useEventStore } from "../store/useEventStore";
 import { EventCard } from "../components/events/EventCard";
-import { CreateEventModal } from "../components/events/CreateEventModal";
+import { CreateEventModal } from "../components/events/modal/CreateEventModal";
 import { DatePickerField } from "../components/common/DatePickerField";
 
 export const EventDashboard = () => {

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { EventItem } from "../../../types/event";
 import { useEventStore } from "../../../store/useEventStore";
-import { CreateActivityModal } from "../CreateActivityModal";
+import { CreateActivityModal } from "../modal/CreateActivityModal";
 
 interface ScheduleTabProps {
   event: EventItem;
@@ -35,12 +35,11 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
         const parsedEnd = new Date(parts[1]);
         if (!isNaN(parsedEnd.getTime())) endDate = parsedEnd;
       } else {
-        // Default to a 4-day view starting from event date
+        // Single day event
         endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 3);
       }
     } else {
-      // Default fallback 4 days
+      // Default fallback 4 days when event date is unconfirmed
       endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 3);
     }
