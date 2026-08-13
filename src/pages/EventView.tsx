@@ -6,6 +6,7 @@ import { DetailsTab } from "../components/events/tabs/DetailsTab";
 import { ScheduleTab } from "../components/events/tabs/ScheduleTab";
 import { BudgetTab } from "../components/events/tabs/BudgetTab";
 import { CommitteeTab } from "../components/events/tabs/CommitteeTab";
+import { ParticipantTab } from "../components/events/tabs/ParticipantTab";
 
 interface EventViewProps {
   event: EventItem;
@@ -13,7 +14,7 @@ interface EventViewProps {
   onDelete: (eventId: string) => void;
 }
 
-type TabType = "schedule" | "budget" | "committee" | "details";
+type TabType = "schedule" | "participant" | "budget" | "committee" | "details";
 
 export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("schedule");
@@ -28,6 +29,7 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
 
   const tabs: { id: TabType; label: string }[] = [
     { id: "schedule", label: "Schedule" },
+    { id: "participant", label: "Participant" },
     { id: "budget", label: "Budget" },
     { id: "committee", label: "Committee" },
     { id: "details", label: "Details" },
@@ -80,6 +82,7 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
         {activeTab === "schedule" && <ScheduleTab event={event} />}
         {activeTab === "budget" && <BudgetTab />}
         {activeTab === "committee" && <CommitteeTab />}
+        {activeTab === "participant" && <ParticipantTab />}
       </main>
 
       {/* Confirmation Modal */}
