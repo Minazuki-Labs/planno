@@ -131,16 +131,12 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
           {/* Days Header */}
           <div className="col-span-full grid grid-cols-subgrid items-center border-b border-slate-800/80 pb-4 mb-4 sticky top-0 bg-slate-950/95 backdrop-blur-md z-30">
             <div /> {/* Corner spacer */}
-            {eventDays.map((day, idx) => (
+            {eventDays.map((day) => (
               <div key={day.fullDate} className="flex flex-col items-center justify-center gap-1">
-                <span className="text-[11px] font-medium tracking-wider uppercase text-slate-400">{day.dayLabel}</span>
-                <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${
-                    idx === 0 
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-2 ring-indigo-500/30" 
-                      : "bg-slate-800/80 text-slate-300 border border-slate-700/60"
-                  }`}
-                >
+                <span className="text-[11px] font-medium tracking-wider uppercase text-slate-400">
+                  {day.dayLabel}
+                </span>
+                <span className="w-8 h-8 flex items-center justify-center rounded-xl text-xs font-semibold text-slate-300 bg-slate-800/80 border border-slate-700/60 transition-all">
                   {day.dateNum}
                 </span>
               </div>
