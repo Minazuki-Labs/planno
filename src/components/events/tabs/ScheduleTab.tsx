@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { EventItem } from "../../../types/event";
+import { EventItem, ActivityItem } from "../../../types/event";
 import { useEventStore } from "../../../store/useEventStore";
 import { CreateActivityModal } from "../modal/CreateActivityModal";
 
@@ -10,6 +10,8 @@ interface ScheduleTabProps {
 const START_HOUR = 0;
 const END_HOUR = 24;
 const HOUR_HEIGHT_PX = 80;
+const TIME_COL_WIDTH = 64;
+const MIN_DAY_COL_WIDTH = 130;
 
 export const ScheduleTab = ({ event }: ScheduleTabProps) => {
   const { activities, fetchActivities, createActivity, deleteActivity } = useEventStore();
@@ -103,6 +105,38 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
     const height = Math.max(24, (endTotalHours - startTotalHours) * HOUR_HEIGHT_PX);
 
     return { top, height };
+  };
+
+  // Scroll to new activity
+  const handleCreateActivity = async (newActivity: ActivityItem) => {
+    await createActivity(newActivity);
+
+    const { top } = calculateBlockGeometry(newActivity.startTime, newActivity.endTime);
+    const targetTop = Math.max(0, top - 40);
+
+    const dayIndex = eventDays.findIndex((d) => d.fullDate === newActivity.dayDate);
+    let targetLeft = 0;
+
+    if (scrollContainerRef.current && dayIndex !== -1) {
+      const containerWidth = scrollContainerRef.current.clientWidth;
+      const totalDays = eventDays.length;
+      
+      const dayColumnWidth = Math.max(
+        MIN_DAY_COL_WIDTH,
+        (containerWidth - TIME_COL_WIDTH) / Math.max(totalDays, 1)
+      );
+      targetLeft = Math.max(0, dayIndex * dayColumnWidth);
+    }
+
+    setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          top: targetTop,
+          left: targetLeft,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   };
 
   const hoursArray = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
@@ -237,7 +271,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
         eventId={event.id}
         availableDays={eventDays}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={createActivity}
+        onSubmit={handleCreateActivity}
       />
     </div>
   );
