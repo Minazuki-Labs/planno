@@ -16,16 +16,21 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastScrolledEventIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     fetchActivities(event.id);
   }, [event.id, fetchActivities]);
 
   useEffect(() => {
+    if (lastScrolledEventIdRef.current === event.id) return;
     if (!activities || activities.length === 0 || !scrollContainerRef.current) return;
 
+    const currentEventActivities = activities.filter((act) => act.eventId === event.id);
+    if (currentEventActivities.length === 0) return;
+
     // Find the earliest activity by start time
-    const earliestTop = activities.reduce((minTop, act) => {
+    const earliestTop = currentEventActivities.reduce((minTop, act) => {
       const { top } = calculateBlockGeometry(act.startTime, act.endTime);
       return Math.min(minTop, top);
     }, Infinity);
@@ -37,8 +42,10 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
         top: targetScroll,
         behavior: "smooth",
       });
+
+      lastScrolledEventIdRef.current = event.id;
     }
-  }, [activities]);
+  }, [activities, event.id]);
 
   const eventDays = useMemo(() => {
     const days: { fullDate: string; dayLabel: string; dateNum: number }[] = [];
