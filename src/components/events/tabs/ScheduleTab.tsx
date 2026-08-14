@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { EventItem } from "../../../types/event";
 import { useEventStore } from "../../../store/useEventStore";
 import { CreateActivityModal } from "../modal/CreateActivityModal";
@@ -14,10 +14,31 @@ const HOUR_HEIGHT_PX = 80;
 export const ScheduleTab = ({ event }: ScheduleTabProps) => {
   const { activities, fetchActivities, createActivity, deleteActivity } = useEventStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchActivities(event.id);
   }, [event.id, fetchActivities]);
+
+  useEffect(() => {
+    if (!activities || activities.length === 0 || !scrollContainerRef.current) return;
+
+    // Find the earliest activity by start time
+    const earliestTop = activities.reduce((minTop, act) => {
+      const { top } = calculateBlockGeometry(act.startTime, act.endTime);
+      return Math.min(minTop, top);
+    }, Infinity);
+
+    if (earliestTop !== Infinity) {
+      const targetScroll = Math.max(0, earliestTop - 40);
+      
+      scrollContainerRef.current.scrollTo({
+        top: targetScroll,
+        behavior: "smooth",
+      });
+    }
+  }, [activities]);
 
   const eventDays = useMemo(() => {
     const days: { fullDate: string; dayLabel: string; dateNum: number }[] = [];
@@ -96,8 +117,10 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
         </button>
       </div>
 
-      {/* Canvas Timetable Grid */}
-      <div className="bg-slate-950/60 border border-slate-800/70 rounded-2xl flex-1 min-h-[500px] max-h-[700px] overflow-auto relative">
+      <div 
+        ref={scrollContainerRef}
+        className="bg-slate-950/60 border border-slate-800/70 rounded-2xl flex-1 min-h-[500px] max-h-[700px] overflow-auto relative scroll-smooth"
+      >
         <div 
           className="w-full min-w-[720px] p-6 pt-4"
           style={{
