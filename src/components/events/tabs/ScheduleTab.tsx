@@ -117,19 +117,19 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
         </button>
       </div>
 
+      {/* Grid Container */}
       <div 
         ref={scrollContainerRef}
-        className="bg-slate-950/60 border border-slate-800/70 rounded-2xl flex-1 min-h-[500px] max-h-[700px] overflow-auto relative scroll-smooth"
+        className="bg-slate-950/40 border border-slate-800/70 rounded-2xl flex-1 min-h-[500px] max-h-[700px] overflow-auto relative scroll-smooth"
       >
         <div 
-          className="w-full min-w-[720px] p-6 pt-4"
+          className="w-full min-w-full inline-grid"
           style={{
-            display: "grid",
             gridTemplateColumns: `64px repeat(${eventDays.length}, minmax(130px, 1fr))`,
           }}
         >
           {/* Days Header */}
-          <div className="col-span-full grid grid-cols-subgrid items-center border-b border-slate-800/80 pb-4 mb-4 sticky top-0 bg-slate-950/95 backdrop-blur-md z-30">
+          <div className="col-span-full grid grid-cols-subgrid items-center border-b border-slate-800/80 sticky top-0 bg-slate-900/95 backdrop-blur-md z-30 py-3">
             <div /> {/* Corner spacer */}
             {eventDays.map((day) => (
               <div key={day.fullDate} className="flex flex-col items-center justify-center gap-1">
@@ -147,7 +147,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
           <div className="col-span-full grid grid-cols-subgrid relative">
             {/* Hour Labels Column */}
             <div 
-              className="relative text-[11px] font-medium text-slate-500 select-none pr-3 sticky left-0 bg-slate-950/95 backdrop-blur-md z-20"
+              className="relative text-[11px] font-medium text-slate-500 select-none pr-3 sticky left-0 bg-slate-900/95 backdrop-blur-md z-20"
               style={{ height: `${totalGridHeight}px` }}
             >
               {hoursArray.map((hour) => (
@@ -191,7 +191,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
                           top: `${top + 1}px`, 
                           height: `${height - 2}px` 
                         }}
-                        className={`absolute left-1 right-1 rounded-xl p-2.5 shadow-lg border border-white/10 ${act.color} flex flex-col justify-between group transition-all duration-150 hover:z-30 hover:scale-[1.01] hover:brightness-110 hover:shadow-xl z-10 cursor-pointer overflow-hidden backdrop-blur-sm`}
+                        className={`absolute left-1 right-1 rounded-xl p-2.5 shadow-lg border border-white/10 ${act.color} flex flex-col justify-between group transition-all duration-150 hover:z-20 hover:scale-[1.01] hover:brightness-110 hover:shadow-xl z-10 cursor-pointer overflow-hidden backdrop-blur-sm`}
                       >
                         <div className="min-w-0 pr-4">
                           <p className="font-semibold text-xs leading-snug truncate text-white drop-shadow-sm">
