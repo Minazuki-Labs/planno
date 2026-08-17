@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ActivityItem } from "../../types/event";
 
 interface Props {
@@ -70,7 +71,7 @@ export const CreateActivityModal = ({ isOpen, eventId, availableDays, onClose, o
     onClose();
   };
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-150"
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -222,4 +223,6 @@ export const CreateActivityModal = ({ isOpen, eventId, availableDays, onClose, o
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
