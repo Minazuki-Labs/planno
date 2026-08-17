@@ -2,11 +2,11 @@ import { useState } from "react";
 
 import { EventItem } from "../types/event";
 import { useEventStore } from "../store/useEventStore";
-import { DetailsTab } from "../components/events/tabs/DetailsTab";
-import { ScheduleTab } from "../components/events/tabs/ScheduleTab";
-import { BudgetTab } from "../components/events/tabs/BudgetTab";
-import { CommitteeTab } from "../components/events/tabs/CommitteeTab";
-import { ParticipantTab } from "../components/events/tabs/ParticipantTab";
+import { DetailsTab } from "../components/details/DetailsTab";
+import { ScheduleTab } from "../components/schedule/ScheduleTab";
+import { BudgetTab } from "../components/budget/BudgetTab";
+import { CommitteeTab } from "../components/committee/CommitteeTab";
+import { ParticipantTab } from "../components/participant/ParticipantTab";
 
 interface EventViewProps {
   event: EventItem;

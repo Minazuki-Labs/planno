@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { EventItem } from "../../../types/event";
-import { DatePickerField } from "../../common/DatePickerField";
+import { EventItem } from "../../types/event";
+import { DatePickerField } from "../common/DatePickerField";
 
 interface DetailsTabProps {
   event: EventItem;

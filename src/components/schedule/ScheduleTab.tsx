@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { EventItem, ActivityItem } from "../../../types/event";
-import { useEventStore } from "../../../store/useEventStore";
-import { CreateActivityModal } from "../modal/CreateActivityModal";
+import { EventItem, ActivityItem } from "../../types/event";
+import { useEventStore } from "../../store/useEventStore";
+import { CreateActivityModal } from "./CreateActivityModal";
 
 interface ScheduleTabProps {
   event: EventItem;
@@ -239,7 +239,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
                             {act.title}
                           </p>
                           <p className="text-[10px] font-medium text-white/80 mt-0.5 truncate tracking-wide">
-                            {act.startTime} – {act.endTime}
+                            {act.startTime} - {act.endTime}
                           </p>
                         </div>
 

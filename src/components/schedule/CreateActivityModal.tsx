@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityItem } from "../../../types/event";
+import { ActivityItem } from "../../types/event";
 
 interface Props {
   isOpen: boolean;
