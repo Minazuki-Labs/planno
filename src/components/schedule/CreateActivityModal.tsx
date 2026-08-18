@@ -72,13 +72,15 @@ export const CreateActivityModal = ({
       return;
     }
 
-    const hasCollision = existingActivities.some((act) => {
+    const conflict = existingActivities.find((act) => {
       if (act.dayDate !== dayDate) return false;
       return startTime < act.endTime && endTime > act.startTime;
     });
 
-    if (hasCollision) {
-      setError("This activity overlaps with an existing time slot.");
+    if (conflict) {
+      setError(
+        `Time conflict with "${conflict.title}" (${conflict.startTime} - ${conflict.endTime}).`
+      );
       return;
     }
 
