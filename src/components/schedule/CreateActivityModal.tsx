@@ -6,6 +6,7 @@ interface Props {
   isOpen: boolean;
   eventId: string;
   availableDays: { fullDate: string; dayLabel: string; dateNum: number }[];
+  existingActivities: ActivityItem[];
   onClose: () => void;
   onSubmit: (activity: ActivityItem) => void;
 }
@@ -19,7 +20,14 @@ const COLOR_OPTIONS = [
   { name: "Sky", value: "bg-sky-500 text-white" },
 ];
 
-export const CreateActivityModal = ({ isOpen, eventId, availableDays, onClose, onSubmit }: Props) => {
+export const CreateActivityModal = ({ 
+  isOpen, 
+  eventId, 
+  availableDays, 
+  existingActivities, 
+  onClose, 
+  onSubmit 
+}: Props) => {
   const [title, setTitle] = useState("");
   const [dayDate, setDayDate] = useState(availableDays[0]?.fullDate || "");
   const [startTime, setStartTime] = useState("08:00");
@@ -56,6 +64,21 @@ export const CreateActivityModal = ({ isOpen, eventId, availableDays, onClose, o
     e.preventDefault();
     if (!title.trim()) {
       setError("Please enter an activity title.");
+      return;
+    }
+
+    if (startTime >= endTime) {
+      setError("End time must be after start time.");
+      return;
+    }
+
+    const hasCollision = existingActivities.some((act) => {
+      if (act.dayDate !== dayDate) return false;
+      return startTime < act.endTime && endTime > act.startTime;
+    });
+
+    if (hasCollision) {
+      setError("This activity overlaps with an existing time slot.");
       return;
     }
 

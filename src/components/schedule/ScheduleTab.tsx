@@ -270,6 +270,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
         isOpen={isModalOpen}
         eventId={event.id}
         availableDays={eventDays}
+        existingActivities={activities}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateActivity}
       />
