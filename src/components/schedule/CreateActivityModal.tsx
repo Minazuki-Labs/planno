@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ActivityItem } from "../../types/event";
+import { COLOR_OPTIONS, ScheduleDay } from "./scheduleUtils";
 
-interface Props {
+interface CreateActivityModalProps {
   isOpen: boolean;
   eventId: string;
-  availableDays: { fullDate: string; dayLabel: string; dateNum: number }[];
+  availableDays: ScheduleDay[];
   existingActivities: ActivityItem[];
   initialDayDate?: string;
   initialStartTime?: string;
@@ -14,30 +15,21 @@ interface Props {
   onSubmit: (activity: ActivityItem) => void;
 }
 
-const COLOR_OPTIONS = [
-  { name: "Indigo", value: "bg-indigo-500 text-white" },
-  { name: "Emerald", value: "bg-emerald-500 text-white" },
-  { name: "Amber", value: "bg-amber-500 text-slate-950" },
-  { name: "Rose", value: "bg-rose-500 text-white" },
-  { name: "Purple", value: "bg-purple-500 text-white" },
-  { name: "Sky", value: "bg-sky-500 text-white" },
-];
-
-export const CreateActivityModal = ({ 
-  isOpen, 
-  eventId, 
-  availableDays, 
-  existingActivities, 
+export const CreateActivityModal = ({
+  isOpen,
+  eventId,
+  availableDays,
+  existingActivities,
   initialDayDate,
   initialStartTime,
   initialEndTime,
-  onClose, 
-  onSubmit 
-}: Props) => {
+  onClose,
+  onSubmit,
+}: CreateActivityModalProps) => {
   const [title, setTitle] = useState("");
-  const [dayDate, setDayDate] = useState(initialDayDate || availableDays[0]?.fullDate || "");
-  const [startTime, setStartTime] = useState(initialStartTime || "08:00");
-  const [endTime, setEndTime] = useState(initialEndTime || "09:30");
+  const [dayDate, setDayDate] = useState("");
+  const [startTime, setStartTime] = useState("08:00");
+  const [endTime, setEndTime] = useState("09:30");
   const [color, setColor] = useState(COLOR_OPTIONS[0].value);
   const [error, setError] = useState("");
 
@@ -55,14 +47,12 @@ export const CreateActivityModal = ({
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
+      if (e.key === "Escape" && isOpen) onClose();
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, initialDayDate, initialStartTime, initialEndTime, availableDays]);
+  }, [isOpen, initialDayDate, initialStartTime, initialEndTime, availableDays, onClose]);
 
   if (!isOpen) return null;
 
@@ -102,7 +92,7 @@ export const CreateActivityModal = ({
     onClose();
   };
 
-  const modalContent = (
+  return createPortal(
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-150"
       onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -162,13 +152,10 @@ export const CreateActivityModal = ({
                   className="w-full h-[38px] bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 pr-8 py-2 text-xs text-slate-100 outline-none appearance-none transition-all cursor-pointer"
                 >
                   {availableDays.map((d, index) => {
-                    const month = new Date(d.fullDate.replace(/-/g, "/")).toLocaleDateString("en-US", {
-                      month: "short",
-                    });
-
+                    const month = new Date(d.fullDate.replace(/-/g, "/")).toLocaleDateString("en-US", { month: "short" });
                     return (
                       <option key={d.fullDate} value={d.fullDate}>
-                        Day {index + 1} ({d.dayLabel}, {d.dateNum} {month} )
+                        Day {index + 1} ({d.dayLabel}, {d.dateNum} {month})
                       </option>
                     );
                   })}
@@ -252,8 +239,7 @@ export const CreateActivityModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  return createPortal(modalContent, document.body);
 };
