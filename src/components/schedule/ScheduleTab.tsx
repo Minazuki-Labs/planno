@@ -14,7 +14,7 @@ const TIME_COL_WIDTH = 64;
 const MIN_DAY_COL_WIDTH = 130;
 
 export const ScheduleTab = ({ event }: ScheduleTabProps) => {
-  const { activities, fetchActivities, createActivity, deleteActivity } = useEventStore();
+  const { activities, fetchActivities, createActivity, deleteActivity, undoActivity } = useEventStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -23,6 +23,24 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
   useEffect(() => {
     fetchActivities(event.id);
   }, [event.id, fetchActivities]);
+
+  // Keyboard shortcut for undo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isInput = ["INPUT", "TEXTAREA", "SELECT"].includes(
+        (e.target as HTMLElement)?.tagName
+      );
+      if (isInput || isModalOpen) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undoActivity();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undoActivity, isModalOpen]);
 
   useEffect(() => {
     if (lastScrolledEventIdRef.current === event.id) return;

@@ -2,9 +2,14 @@ import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { EventItem, ActivityItem } from "../types/event";
 
+type HistoryAction = 
+  | { type: "CREATE"; activity: ActivityItem }
+  | { type: "DELETE"; activity: ActivityItem };
+
 interface EventState {
   events: EventItem[];
   activities: ActivityItem[];
+  activityHistory: HistoryAction[];
   selectedEventId: string | null;
   loading: boolean;
   error: string | null;
@@ -18,13 +23,15 @@ interface EventState {
 
   // Activity Actions
   fetchActivities: (eventId: string) => Promise<void>;
-  createActivity: (activity: ActivityItem) => Promise<void>;
-  deleteActivity: (id: string) => Promise<void>;
+  createActivity: (activity: ActivityItem, recordHistory?: boolean) => Promise<void>;
+  deleteActivity: (id: string, recordHistory?: boolean) => Promise<void>;
+  undoActivity: () => Promise<void>;
 }
 
 export const useEventStore = create<EventState>((set, get) => ({
   events: [],
   activities: [],
+  activityHistory: [],
   selectedEventId: null,
   loading: false,
   error: null,
@@ -92,15 +99,20 @@ export const useEventStore = create<EventState>((set, get) => ({
   fetchActivities: async (eventId: string) => {
     try {
       const activities = await invoke<ActivityItem[]>("get_activities", { eventId });
-      set({ activities });
+      set({ activities, activityHistory: [] }); // Reset history when switching event
     } catch (err) {
       console.error("Failed to fetch activities:", err);
     }
   },
 
-  createActivity: async (activity: ActivityItem) => {
+  createActivity: async (activity: ActivityItem, recordHistory = true) => {
     const previous = get().activities;
-    set({ activities: [...previous, activity] });
+    set({
+      activities: [...previous, activity],
+      activityHistory: recordHistory
+        ? [...get().activityHistory, { type: "CREATE", activity }]
+        : get().activityHistory,
+    });
     try {
       await invoke("create_activity", { item: activity });
     } catch (err) {
@@ -109,14 +121,36 @@ export const useEventStore = create<EventState>((set, get) => ({
     }
   },
 
-  deleteActivity: async (id: string) => {
+  deleteActivity: async (id: string, recordHistory = true) => {
+    const targetActivity = get().activities.find((a) => a.id === id);
+    if (!targetActivity) return;
+
     const previous = get().activities;
-    set({ activities: previous.filter((a) => a.id !== id) });
+    set({
+      activities: previous.filter((a) => a.id !== id),
+      activityHistory: recordHistory
+        ? [...get().activityHistory, { type: "DELETE", activity: targetActivity }]
+        : get().activityHistory,
+    });
     try {
       await invoke("delete_activity", { id });
     } catch (err) {
       console.error("Failed to delete activity:", err);
       set({ activities: previous });
+    }
+  },
+
+  undoActivity: async () => {
+    const { activityHistory } = get();
+    if (activityHistory.length === 0) return;
+
+    const lastAction = activityHistory[activityHistory.length - 1];
+    set({ activityHistory: activityHistory.slice(0, -1) });
+
+    if (lastAction.type === "CREATE") {
+      await get().deleteActivity(lastAction.activity.id, false);
+    } else if (lastAction.type === "DELETE") {
+      await get().createActivity(lastAction.activity, false);
     }
   },
 }));
