@@ -17,8 +17,29 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
   const { activities, fetchActivities, createActivity, deleteActivity, undoActivity } = useEventStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // State for preselected slot
+  const [selectedSlot, setSelectedSlot] = useState<{
+    dayDate: string;
+    startTime: string;
+    endTime: string;
+  } | null>(null);
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastScrolledEventIdRef = useRef<string | null>(null);
+
+  // Helper to trigger modal at a specific cell
+  const handleOpenSlot = (dayDate: string, hour: number) => {
+    const formattedStart = `${hour.toString().padStart(2, "0")}:00`;
+    const endHour = Math.min(hour + 1, END_HOUR);
+    const formattedEnd = `${endHour.toString().padStart(2, "0")}:00`;
+
+    setSelectedSlot({
+      dayDate,
+      startTime: formattedStart,
+      endTime: formattedEnd,
+    });
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     fetchActivities(event.id);
@@ -231,12 +252,21 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
                   style={{ height: `${totalGridHeight}px` }}
                 >
                   {/* Horizontal Guideline Grid */}
-                  {hoursArray.map((hour) => (
-                    <div
+                  {hoursArray.slice(0, -1).map((hour) => (
+                    <button
                       key={hour}
-                      className="absolute left-0 right-0 border-t border-slate-800/50 pointer-events-none"
-                      style={{ top: `${(hour - START_HOUR) * HOUR_HEIGHT_PX}px` }}
-                    />
+                      type="button"
+                      onClick={() => handleOpenSlot(day.fullDate, hour)}
+                      style={{
+                        top: `${(hour - START_HOUR) * HOUR_HEIGHT_PX}px`,
+                        height: `${HOUR_HEIGHT_PX}px`,
+                      }}
+                      className="absolute inset-x-0 border-t border-slate-800/50 hover:bg-indigo-500/10 transition-colors flex items-center justify-center group/slot z-0"
+                    >
+                      <span className="opacity-0 group-hover/slot:opacity-100 text-[11px] font-medium text-indigo-400 bg-slate-900/90 border border-indigo-500/30 px-2 py-0.5 rounded-md pointer-events-none shadow-sm transition-opacity">
+                        + Add at {hour.toString().padStart(2, "0")}:00
+                      </span>
+                    </button>
                   ))}
 
                   {/* Activity Cards */}
@@ -289,7 +319,13 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
         eventId={event.id}
         availableDays={eventDays}
         existingActivities={activities}
-        onClose={() => setIsModalOpen(false)}
+        initialDayDate={selectedSlot?.dayDate}
+        initialStartTime={selectedSlot?.startTime}
+        initialEndTime={selectedSlot?.endTime}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedSlot(null);
+        }}
         onSubmit={handleCreateActivity}
       />
     </div>

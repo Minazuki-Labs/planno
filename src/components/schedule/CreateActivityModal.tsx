@@ -7,6 +7,9 @@ interface Props {
   eventId: string;
   availableDays: { fullDate: string; dayLabel: string; dateNum: number }[];
   existingActivities: ActivityItem[];
+  initialDayDate?: string;
+  initialStartTime?: string;
+  initialEndTime?: string;
   onClose: () => void;
   onSubmit: (activity: ActivityItem) => void;
 }
@@ -25,13 +28,16 @@ export const CreateActivityModal = ({
   eventId, 
   availableDays, 
   existingActivities, 
+  initialDayDate,
+  initialStartTime,
+  initialEndTime,
   onClose, 
   onSubmit 
 }: Props) => {
   const [title, setTitle] = useState("");
-  const [dayDate, setDayDate] = useState(availableDays[0]?.fullDate || "");
-  const [startTime, setStartTime] = useState("08:00");
-  const [endTime, setEndTime] = useState("09:30");
+  const [dayDate, setDayDate] = useState(initialDayDate || availableDays[0]?.fullDate || "");
+  const [startTime, setStartTime] = useState(initialStartTime || "08:00");
+  const [endTime, setEndTime] = useState(initialEndTime || "09:30");
   const [color, setColor] = useState(COLOR_OPTIONS[0].value);
   const [error, setError] = useState("");
 
@@ -40,9 +46,9 @@ export const CreateActivityModal = ({
   useEffect(() => {
     if (isOpen) {
       setTitle("");
-      setDayDate(availableDays[0]?.fullDate || "");
-      setStartTime("08:00");
-      setEndTime("09:30");
+      setDayDate(initialDayDate || availableDays[0]?.fullDate || "");
+      setStartTime(initialStartTime || "08:00");
+      setEndTime(initialEndTime || "09:30");
       setColor(COLOR_OPTIONS[0].value);
       setError("");
       setTimeout(() => inputRef.current?.focus(), 50);
@@ -56,7 +62,7 @@ export const CreateActivityModal = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, availableDays, onClose]);
+  }, [isOpen, initialDayDate, initialStartTime, initialEndTime, availableDays]);
 
   if (!isOpen) return null;
 
