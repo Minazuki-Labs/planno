@@ -27,6 +27,8 @@ export const CreateActivityModal = ({
   onSubmit,
 }: CreateActivityModalProps) => {
   const [title, setTitle] = useState("");
+  const [personInCharge, setPersonInCharge] = useState("");
+  const [description, setDescription] = useState("");
   const [dayDate, setDayDate] = useState("");
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("09:30");
@@ -38,6 +40,8 @@ export const CreateActivityModal = ({
   useEffect(() => {
     if (isOpen) {
       setTitle("");
+      setPersonInCharge("");
+      setDescription("");
       setDayDate(initialDayDate || availableDays[0]?.fullDate || "");
       setStartTime(initialStartTime || "08:00");
       setEndTime(initialEndTime || "09:30");
@@ -69,8 +73,11 @@ export const CreateActivityModal = ({
     }
 
     const conflict = existingActivities.find((act) => {
-      if (act.dayDate !== dayDate) return false;
-      return startTime < act.endTime && endTime > act.startTime;
+      const actDayDate = act.dayDate || act.dayDate;
+      const actStart = act.startTime || act.startTime || "";
+      const actEnd = act.endTime || act.endTime || "";
+      if (actDayDate !== dayDate) return false;
+      return startTime < actEnd && endTime > actStart;
     });
 
     if (conflict) {
@@ -88,6 +95,8 @@ export const CreateActivityModal = ({
       startTime,
       endTime,
       color,
+      description: description.trim() || null,
+      personInCharge: personInCharge.trim() || null,
     });
     onClose();
   };
@@ -98,7 +107,7 @@ export const CreateActivityModal = ({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl space-y-5"
+        className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-5 shadow-2xl space-y-5"
         role="dialog"
         aria-modal="true"
       >
@@ -219,6 +228,36 @@ export const CreateActivityModal = ({
                 className="w-full min-h-[38px] bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
               />
             </div>
+          </div>
+
+          {/* Person In Charge */}
+          <div>
+            <label htmlFor="person-in-charge" className="block text-[11px] font-medium text-slate-400 mb-1.5">
+              Person in Charge
+            </label>
+            <input
+              id="person-in-charge"
+              type="text"
+              placeholder="e.g. Jane Doe"
+              value={personInCharge}
+              onChange={(e) => setPersonInCharge(e.target.value)}
+              className="w-full min-h-[38px] bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition-all"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-[11px] font-medium text-slate-400 mb-1.5">
+              Description
+            </label>
+            <textarea
+              id="description"
+              rows={3}
+              placeholder="Add any additional details or notes..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 outline-none transition-all resize-none"
+            />
           </div>
 
           {/* Actions Button */}
