@@ -22,6 +22,8 @@ pub struct ActivityItem {
     pub start_time: String,
     pub end_time: String,
     pub color: String,
+    pub description: Option<String>,
+    pub person_in_charge: Option<String>,
 }
 
 pub struct DbState(pub Mutex<Connection>);

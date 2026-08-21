@@ -21,6 +21,8 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
             color TEXT NOT NULL,
+            description TEXT,
+            person_in_charge TEXT,
             FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
         )",
         [],

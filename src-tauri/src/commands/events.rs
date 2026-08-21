@@ -66,7 +66,7 @@ pub fn update_event(state: State<DbState>, item: EventItem) -> Result<(), String
 pub fn get_activities(state: State<DbState>, event_id: String) -> Result<Vec<ActivityItem>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
-        .prepare("SELECT id, event_id, title, day_date, start_time, end_time, color FROM activities WHERE event_id = ?1 ORDER BY start_time ASC")
+        .prepare("SELECT id, event_id, title, day_date, start_time, end_time, color, description, person_in_charge FROM activities WHERE event_id = ?1 ORDER BY start_time ASC")
         .map_err(|e| e.to_string())?;
 
     let activity_iter = stmt
@@ -79,6 +79,8 @@ pub fn get_activities(state: State<DbState>, event_id: String) -> Result<Vec<Act
                 start_time: row.get(4)?,
                 end_time: row.get(5)?,
                 color: row.get(6)?,
+                description: row.get(7)?,
+                person_in_charge: row.get(8)?,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -95,8 +97,8 @@ pub fn get_activities(state: State<DbState>, event_id: String) -> Result<Vec<Act
 pub fn create_activity(state: State<DbState>, item: ActivityItem) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     conn.execute(
-        "INSERT INTO activities (id, event_id, title, day_date, start_time, end_time, color) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        params![item.id, item.event_id, item.title, item.day_date, item.start_time, item.end_time, item.color],
+        "INSERT INTO activities (id, event_id, title, day_date, start_time, end_time, color, description, person_in_charge) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        params![item.id, item.event_id, item.title, item.day_date, item.start_time, item.end_time, item.color, item.description, item.person_in_charge],
     )
     .map_err(|e| e.to_string())?;
 

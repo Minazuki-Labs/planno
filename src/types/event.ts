@@ -14,4 +14,6 @@ export interface ActivityItem {
   startTime: string;
   endTime: string;
   color: string;
+  description?: string | null;
+  personInCharge?: string | null;
 }
