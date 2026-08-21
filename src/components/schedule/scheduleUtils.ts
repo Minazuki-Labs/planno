@@ -1,6 +1,6 @@
 export const START_HOUR = 0;
 export const END_HOUR = 24;
-export const HOUR_HEIGHT_PX = 80;
+export const HOUR_HEIGHT_PX = 110;
 export const TIME_COL_WIDTH = 64;
 export const MIN_DAY_COL_WIDTH = 130;
 
