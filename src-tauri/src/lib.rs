@@ -12,6 +12,9 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            let window = app.get_webview_window("main").unwrap();
+            window.maximize()?;
+
             let app_dir = app.path().app_data_dir().expect("Failed to get app data dir");
             std::fs::create_dir_all(&app_dir).expect("Failed to create app data directory");
 
