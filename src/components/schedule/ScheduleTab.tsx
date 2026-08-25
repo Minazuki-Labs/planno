@@ -181,6 +181,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
       {/* View Activity Details Modal */}
       <ActivityDetailsModal
         activity={viewedActivity}
+        availableDays={eventDays}
         onClose={() => setViewedActivity(null)}
         onDelete={deleteActivity}
       />
