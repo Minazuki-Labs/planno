@@ -12,6 +12,9 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            let window = app.get_webview_window("main").unwrap();
+            window.maximize()?;
+
             let app_dir = app.path().app_data_dir().expect("Failed to get app data dir");
             std::fs::create_dir_all(&app_dir).expect("Failed to create app data directory");
 
@@ -27,7 +30,12 @@ pub fn run() {
             commands::events::get_events,
             commands::events::create_event,
             commands::events::delete_event,
-            commands::events::update_event
+            commands::events::update_event,
+
+            commands::events::get_activities,
+            commands::events::create_activity,
+            commands::events::delete_activity,
+            commands::events::update_activity,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

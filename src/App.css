@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+html,
+body {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+}
+
 /* -- Date Picker -- */
 .react-datepicker-wrapper {
   width: 100%;
