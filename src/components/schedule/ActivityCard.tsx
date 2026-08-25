@@ -3,10 +3,11 @@ import { calculateBlockGeometry } from "./scheduleUtils";
 
 interface ActivityCardProps {
   activity: ActivityItem;
+  onClick: (activity: ActivityItem) => void;
   onDelete: (id: string) => void;
 }
 
-export const ActivityCard = ({ activity, onDelete }: ActivityCardProps) => {
+export const ActivityCard = ({ activity, onClick, onDelete }: ActivityCardProps) => {
   const { top, height } = calculateBlockGeometry(activity.startTime, activity.endTime);
 
   const isCompact = height < 55;
@@ -14,6 +15,7 @@ export const ActivityCard = ({ activity, onDelete }: ActivityCardProps) => {
 
   return (
     <div
+      onClick={() => onClick(activity)}
       style={{
         top: `${top + 1}px`,
         height: `${height - 2}px`,

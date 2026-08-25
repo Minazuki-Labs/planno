@@ -7,6 +7,7 @@ interface ScheduleDayColumnProps {
   activities: ActivityItem[];
   totalGridHeight: number;
   onSelectSlot: (dayDate: string, hour: number) => void;
+  onSelectActivity: (activity: ActivityItem) => void;
   onDeleteActivity: (id: string) => void;
 }
 
@@ -15,6 +16,7 @@ export const ScheduleDayColumn = ({
   activities,
   totalGridHeight,
   onSelectSlot,
+  onSelectActivity,
   onDeleteActivity,
 }: ScheduleDayColumnProps) => {
   const hoursArray = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
@@ -56,7 +58,12 @@ export const ScheduleDayColumn = ({
 
       {/* Activity Cards */}
       {activities.map((act) => (
-        <ActivityCard key={act.id} activity={act} onDelete={onDeleteActivity} />
+        <ActivityCard
+          key={act.id}
+          activity={act}
+          onClick={onSelectActivity}
+          onDelete={onDeleteActivity}
+        />
       ))}
     </div>
   );

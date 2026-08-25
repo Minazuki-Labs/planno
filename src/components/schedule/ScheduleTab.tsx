@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { EventItem, ActivityItem } from "../../types/event";
 import { useEventStore } from "../../store/useEventStore";
 import { CreateActivityModal } from "./CreateActivityModal";
+import { ActivityDetailsModal } from "./ActivityDetailsModal";
 import { ScheduleDayColumn } from "./ScheduleDayColumn";
 import {
   START_HOUR,
@@ -21,6 +22,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
   const { activities, fetchActivities, createActivity, deleteActivity, undoActivity } = useEventStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ dayDate: string; startTime: string; endTime: string } | null>(null);
+  const [viewedActivity, setViewedActivity] = useState<ActivityItem | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastScrolledEventIdRef = useRef<string | null>(null);
@@ -48,7 +50,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
       const isInput = ["INPUT", "TEXTAREA", "SELECT"].includes(
         (e.target as HTMLElement)?.tagName
       );
-      if (isInput || isModalOpen) return;
+      if (isInput || isModalOpen || viewedActivity) return;
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
         e.preventDefault();
@@ -58,7 +60,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undoActivity, isModalOpen]);
+  }, [undoActivity, isModalOpen, viewedActivity]);
 
   // Auto-scroll to earliest activity on event change
   useEffect(() => {
@@ -152,6 +154,7 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
                 activities={activities.filter((a) => a.dayDate === day.fullDate)}
                 totalGridHeight={totalGridHeight}
                 onSelectSlot={handleOpenSlot}
+                onSelectActivity={(act) => setViewedActivity(act)}
                 onDeleteActivity={deleteActivity}
               />
             ))}
@@ -173,6 +176,13 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
           setSelectedSlot(null);
         }}
         onSubmit={handleCreateActivity}
+      />
+
+      {/* View Activity Details Modal */}
+      <ActivityDetailsModal
+        activity={viewedActivity}
+        onClose={() => setViewedActivity(null)}
+        onDelete={deleteActivity}
       />
     </div>
   );
