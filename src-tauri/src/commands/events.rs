@@ -113,3 +113,26 @@ pub fn delete_activity(state: State<DbState>, id: String) -> Result<(), String> 
 
     Ok(())
 }
+
+#[tauri::command]
+pub fn update_activity(state: State<DbState>, item: ActivityItem) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE activities 
+         SET title = ?1, day_date = ?2, start_time = ?3, end_time = ?4, color = ?5, description = ?6, person_in_charge = ?7 
+         WHERE id = ?8",
+        params![
+            item.title,
+            item.day_date,
+            item.start_time,
+            item.end_time,
+            item.color,
+            item.description,
+            item.person_in_charge,
+            item.id
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}

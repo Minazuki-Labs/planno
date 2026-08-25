@@ -26,6 +26,7 @@ interface EventState {
   createActivity: (activity: ActivityItem, recordHistory?: boolean) => Promise<void>;
   deleteActivity: (id: string, recordHistory?: boolean) => Promise<void>;
   undoActivity: () => Promise<void>;
+  updateActivity: (activity: ActivityItem) => Promise<void>;
 }
 
 export const useEventStore = create<EventState>((set, get) => ({
@@ -151,6 +152,21 @@ export const useEventStore = create<EventState>((set, get) => ({
       await get().deleteActivity(lastAction.activity.id, false);
     } else if (lastAction.type === "DELETE") {
       await get().createActivity(lastAction.activity, false);
+    }
+  },
+
+  updateActivity: async (updatedActivity: ActivityItem) => {
+    const previous = get().activities;
+    set({
+      activities: previous.map((a) =>
+        a.id === updatedActivity.id ? updatedActivity : a
+      ),
+    });
+    try {
+      await invoke("update_activity", { item: updatedActivity });
+    } catch (err) {
+      console.error("Failed to update activity:", err);
+      set({ activities: previous });
     }
   },
 }));

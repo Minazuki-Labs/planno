@@ -19,7 +19,7 @@ interface ScheduleTabProps {
 }
 
 export const ScheduleTab = ({ event }: ScheduleTabProps) => {
-  const { activities, fetchActivities, createActivity, deleteActivity, undoActivity } = useEventStore();
+  const { activities, fetchActivities, createActivity, deleteActivity, undoActivity, updateActivity } = useEventStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ dayDate: string; startTime: string; endTime: string } | null>(null);
   const [viewedActivity, setViewedActivity] = useState<ActivityItem | null>(null);
@@ -182,8 +182,10 @@ export const ScheduleTab = ({ event }: ScheduleTabProps) => {
       <ActivityDetailsModal
         activity={viewedActivity}
         availableDays={eventDays}
+        existingActivities={activities}
         onClose={() => setViewedActivity(null)}
         onDelete={deleteActivity}
+        onUpdate={updateActivity}
       />
     </div>
   );
