@@ -28,5 +28,28 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         [],
     )?;
 
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS groups (
+            id TEXT PRIMARY KEY,
+            event_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS participants (
+            id TEXT PRIMARY KEY,
+            event_id TEXT NOT NULL,
+            group_id TEXT,
+            name TEXT NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('teacher', 'leader', 'co_leader', 'member')),
+            FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE,
+            FOREIGN KEY(group_id) REFERENCES groups(id) ON DELETE SET NULL
+        )",
+        [],
+    )?;
+
     Ok(())
 }
