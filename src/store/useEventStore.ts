@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { EventItem, ActivityItem } from "../types/event";
+import { GroupItem, ParticipantItem } from "../types/participant";
 
 type HistoryAction = 
   | { type: "CREATE"; activity: ActivityItem }
@@ -9,6 +10,8 @@ type HistoryAction =
 interface EventState {
   events: EventItem[];
   activities: ActivityItem[];
+  groups: GroupItem[];
+  participants: ParticipantItem[];
   activityHistory: HistoryAction[];
   selectedEventId: string | null;
   loading: boolean;
@@ -27,11 +30,24 @@ interface EventState {
   deleteActivity: (id: string, recordHistory?: boolean) => Promise<void>;
   undoActivity: () => Promise<void>;
   updateActivity: (activity: ActivityItem) => Promise<void>;
+
+  // Group Actions
+  fetchGroups: (eventId: string) => Promise<void>;
+  createGroup: (group: GroupItem) => Promise<void>;
+  deleteGroup: (id: string) => Promise<void>;
+
+  // Participant Actions
+  fetchParticipants: (eventId: string) => Promise<void>;
+  createParticipant: (participant: ParticipantItem) => Promise<void>;
+  deleteParticipant: (id: string) => Promise<void>;
+  updateParticipant: (participant: ParticipantItem) => Promise<void>;
 }
 
 export const useEventStore = create<EventState>((set, get) => ({
   events: [],
   activities: [],
+  groups: [],
+  participants: [],
   activityHistory: [],
   selectedEventId: null,
   loading: false,
@@ -167,6 +183,85 @@ export const useEventStore = create<EventState>((set, get) => ({
     } catch (err) {
       console.error("Failed to update activity:", err);
       set({ activities: previous });
+    }
+  },
+
+  // Group handlers
+  fetchGroups: async (eventId: string) => {
+    try {
+      const groups = await invoke<GroupItem[]>("get_groups", { eventId });
+      set({ groups });
+    } catch (err) {
+      console.error("Failed to fetch groups:", err);
+    }
+  },
+
+  createGroup: async (group: GroupItem) => {
+    const previous = get().groups;
+    set({ groups: [...previous, group] });
+    try {
+      await invoke("create_group", { item: group });
+    } catch (err) {
+      console.error("Failed to create group:", err);
+      set({ groups: previous });
+    }
+  },
+
+  deleteGroup: async (id: string) => {
+    const previous = get().groups;
+    set({ groups: previous.filter((g) => g.id !== id) });
+    try {
+      await invoke("delete_group", { id });
+    } catch (err) {
+      console.error("Failed to delete group:", err);
+      set({ groups: previous });
+    }
+  },
+
+  // Participant handlers
+  fetchParticipants: async (eventId: string) => {
+    try {
+      const participants = await invoke<ParticipantItem[]>("get_participants", { eventId });
+      set({ participants });
+    } catch (err) {
+      console.error("Failed to fetch participants:", err);
+    }
+  },
+
+  createParticipant: async (participant: ParticipantItem) => {
+    const previous = get().participants;
+    set({ participants: [...previous, participant] });
+    try {
+      await invoke("create_participant", { item: participant });
+    } catch (err) {
+      console.error("Failed to create participant:", err);
+      set({ participants: previous });
+    }
+  },
+
+  deleteParticipant: async (id: string) => {
+    const previous = get().participants;
+    set({ participants: previous.filter((p) => p.id !== id) });
+    try {
+      await invoke("delete_participant", { id });
+    } catch (err) {
+      console.error("Failed to delete participant:", err);
+      set({ participants: previous });
+    }
+  },
+
+  updateParticipant: async (participant: ParticipantItem) => {
+    const previous = get().participants;
+    set({
+      participants: previous.map((p) =>
+        p.id === participant.id ? participant : p
+      ),
+    });
+    try {
+      await invoke("update_participant", { item: participant });
+    } catch (err) {
+      console.error("Failed to update participant:", err);
+      set({ participants: previous });
     }
   },
 }));

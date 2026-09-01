@@ -36,6 +36,15 @@ pub fn run() {
             commands::events::create_activity,
             commands::events::delete_activity,
             commands::events::update_activity,
+
+            commands::events::get_groups,
+            commands::events::create_group,
+            commands::events::delete_group,
+
+            commands::events::get_participants,
+            commands::events::create_participant,
+            commands::events::delete_participant,
+            commands::events::update_participant,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

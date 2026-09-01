@@ -1,6 +1,6 @@
 use rusqlite::params;
 use tauri::State;
-use crate::models::{DbState, EventItem, ActivityItem};
+use crate::models::{DbState, EventItem, ActivityItem, GroupItem, ParticipantItem, ParticipantRole};
 
 #[tauri::command]
 pub fn get_events(state: State<DbState>) -> Result<Vec<EventItem>, String> {
@@ -131,6 +131,114 @@ pub fn update_activity(state: State<DbState>, item: ActivityItem) -> Result<(), 
             item.person_in_charge,
             item.id
         ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_groups(state: State<DbState>, event_id: String) -> Result<Vec<GroupItem>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare("SELECT id, event_id, name FROM groups WHERE event_id = ?1 ORDER BY name ASC")
+        .map_err(|e| e.to_string())?;
+
+    let group_iter = stmt
+        .query_map(params![event_id], |row| {
+            Ok(GroupItem {
+                id: row.get(0)?,
+                event_id: row.get(1)?,
+                name: row.get(2)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut groups = Vec::new();
+    for group in group_iter {
+        groups.push(group.map_err(|e| e.to_string())?);
+    }
+
+    Ok(groups)
+}
+
+#[tauri::command]
+pub fn create_group(state: State<DbState>, item: GroupItem) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO groups (id, event_id, name) VALUES (?1, ?2, ?3)",
+        params![item.id, item.event_id, item.name],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_group(state: State<DbState>, id: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM groups WHERE id = ?1", params![id])
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_participants(state: State<DbState>, event_id: String) -> Result<Vec<ParticipantItem>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare("SELECT id, event_id, group_id, name, role FROM participants WHERE event_id = ?1 ORDER BY name ASC")
+        .map_err(|e| e.to_string())?;
+
+    let participant_iter = stmt
+        .query_map(params![event_id], |row| {
+            let role_str: String = row.get(4)?;
+            let role = ParticipantRole::from_str(&role_str).map_err(|e| rusqlite::Error::ToSqlConversionFailure(e.into()))?;
+            Ok(ParticipantItem {
+                id: row.get(0)?,
+                event_id: row.get(1)?,
+                group_id: row.get(2)?,
+                name: row.get(3)?,
+                role,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut participants = Vec::new();
+    for participant in participant_iter {
+        participants.push(participant.map_err(|e| e.to_string())?);
+    }
+
+    Ok(participants)
+}
+
+#[tauri::command]
+pub fn create_participant(state: State<DbState>, item: ParticipantItem) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO participants (id, event_id, group_id, name, role) VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![item.id, item.event_id, item.group_id, item.name, item.role.as_str()],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_participant(state: State<DbState>, id: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM participants WHERE id = ?1", params![id])
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn update_participant(state: State<DbState>, item: ParticipantItem) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE participants SET group_id = ?1, name = ?2, role = ?3 WHERE id = ?4",
+        params![item.group_id, item.name, item.role.as_str(), item.id],
     )
     .map_err(|e| e.to_string())?;
 
