@@ -1,13 +1,9 @@
-import { useState, useMemo } from "react";
-import { ParticipantItem, GroupItem, ParticipantRole } from "../../types/participant";
+import { useState, useMemo, useEffect } from "react";
+import { ParticipantItem, ParticipantRole } from "../../types/participant";
+import { useEventStore } from "../../store/useEventStore";
 
 interface ParticipantTabProps {
   eventId: string;
-  groups?: GroupItem[];
-  participants?: ParticipantItem[];
-  onAddGroup?: (name: string) => void;
-  onAddParticipant?: (participant: Omit<ParticipantItem, "id" | "eventId">) => void;
-  onDeleteParticipant?: (id: string) => void;
 }
 
 const ROLE_BADGES: Record<ParticipantRole, { label: string; className: string }> = {
@@ -29,14 +25,17 @@ const ROLE_BADGES: Record<ParticipantRole, { label: string; className: string }>
   },
 };
 
-export const ParticipantTab = ({
-  eventId,
-  groups = [],
-  participants = [],
-  onAddGroup,
-  onAddParticipant,
-  onDeleteParticipant,
-}: ParticipantTabProps) => {
+export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
+  const {
+    groups,
+    participants,
+    fetchGroups,
+    fetchParticipants,
+    createGroup,
+    createParticipant,
+    deleteParticipant,
+  } = useEventStore();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
@@ -49,6 +48,13 @@ export const ParticipantTab = ({
   const [selectedRole, setSelectedRole] = useState<ParticipantRole>("member");
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
 
+  useEffect(() => {
+    if (eventId) {
+      fetchGroups(eventId);
+      fetchParticipants(eventId);
+    }
+  }, [eventId, fetchGroups, fetchParticipants]);
+
   // Filter participants by search query
   const filteredParticipants = useMemo(() => {
     return participants.filter((p) =>
@@ -59,8 +65,7 @@ export const ParticipantTab = ({
   // Group categorized data
   const groupedData = useMemo(() => {
     const map = new Map<string | null, ParticipantItem[]>();
-    
-    // Initialise all existing groups
+
     groups.forEach((g) => map.set(g.id, []));
     map.set(null, []); // Unassigned group
 
@@ -72,22 +77,32 @@ export const ParticipantTab = ({
     return map;
   }, [groups, filteredParticipants]);
 
-  const handleCreateGroup = (e: React.FormEvent) => {
+  const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGroupName.trim()) return;
-    onAddGroup?.(newGroupName.trim());
+
+    await createGroup({
+      id: crypto.randomUUID(),
+      eventId,
+      name: newGroupName.trim(),
+    });
+
     setNewGroupName("");
     setIsGroupModalOpen(false);
   };
 
-  const handleCreateParticipant = (e: React.FormEvent) => {
+  const handleCreateParticipant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newParticipantName.trim()) return;
-    onAddParticipant?.({
+
+    await createParticipant({
+      id: crypto.randomUUID(),
+      eventId,
       name: newParticipantName.trim(),
       role: selectedRole,
       groupId: selectedGroupId || null,
     });
+
     setNewParticipantName("");
     setSelectedRole("member");
     setSelectedGroupId("");
@@ -193,7 +208,7 @@ export const ParticipantTab = ({
                       <ParticipantRow
                         key={person.id}
                         person={person}
-                        onDelete={onDeleteParticipant}
+                        onDelete={deleteParticipant}
                       />
                     ))
                   )}
@@ -219,7 +234,7 @@ export const ParticipantTab = ({
                   <ParticipantRow
                     key={person.id}
                     person={person}
-                    onDelete={onDeleteParticipant}
+                    onDelete={deleteParticipant}
                   />
                 ))}
               </div>

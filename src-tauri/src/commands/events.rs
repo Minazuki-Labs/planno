@@ -193,11 +193,18 @@ pub fn get_participants(state: State<DbState>, event_id: String) -> Result<Vec<P
     let participant_iter = stmt
         .query_map(params![event_id], |row| {
             let role_str: String = row.get(4)?;
-            let role = ParticipantRole::from_str(&role_str).map_err(|e| rusqlite::Error::ToSqlConversionFailure(e.into()))?;
+            let role = ParticipantRole::from_str(&role_str).unwrap_or(ParticipantRole::Member);
+
+            let raw_group_id: Option<String> = row.get(2)?;
+            let group_id = match raw_group_id {
+                Some(ref s) if s.trim().is_empty() => None,
+                other => other,
+            };
+
             Ok(ParticipantItem {
                 id: row.get(0)?,
                 event_id: row.get(1)?,
-                group_id: row.get(2)?,
+                group_id,
                 name: row.get(3)?,
                 role,
             })
@@ -215,9 +222,21 @@ pub fn get_participants(state: State<DbState>, event_id: String) -> Result<Vec<P
 #[tauri::command]
 pub fn create_participant(state: State<DbState>, item: ParticipantItem) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
+    
+    let normalized_group_id = match item.group_id {
+        Some(ref id) if id.trim().is_empty() => None,
+        other => other,
+    };
+
     conn.execute(
         "INSERT INTO participants (id, event_id, group_id, name, role) VALUES (?1, ?2, ?3, ?4, ?5)",
-        params![item.id, item.event_id, item.group_id, item.name, item.role.as_str()],
+        params![
+            item.id,
+            item.event_id,
+            normalized_group_id,
+            item.name,
+            item.role.as_str()
+        ],
     )
     .map_err(|e| e.to_string())?;
 
@@ -236,9 +255,14 @@ pub fn delete_participant(state: State<DbState>, id: String) -> Result<(), Strin
 #[tauri::command]
 pub fn update_participant(state: State<DbState>, item: ParticipantItem) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let normalized_group_id = match item.group_id {
+        Some(ref id) if id.trim().is_empty() => None,
+        other => other,
+    };
+
     conn.execute(
         "UPDATE participants SET group_id = ?1, name = ?2, role = ?3 WHERE id = ?4",
-        params![item.group_id, item.name, item.role.as_str(), item.id],
+        params![normalized_group_id, item.name, item.role.as_str(), item.id],
     )
     .map_err(|e| e.to_string())?;
 

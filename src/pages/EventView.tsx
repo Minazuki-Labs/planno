@@ -199,7 +199,7 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
         {activeTab === "schedule" && <ScheduleTab event={event} />}
         {activeTab === "budget" && <BudgetTab />}
         {activeTab === "committee" && <CommitteeTab />}
-        {activeTab === "participant" && <ParticipantTab />}
+        {activeTab === "participant" && <ParticipantTab eventId={event.id} />}
       </main>
 
       {/* Confirmation Modal */}
