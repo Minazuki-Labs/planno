@@ -122,7 +122,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Search Bar */}
-          <div className="relative flex-1 sm:w-56">
+          <div className="relative flex-1 sm:w-56 h-10.5">
             <svg
               className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
               fill="none"
@@ -136,7 +136,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
               placeholder="Search participant..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-7 py-1.5 bg-slate-900/90 border border-slate-800 focus:border-indigo-500/80 text-slate-200 placeholder-slate-500 rounded-xl text-xs outline-none transition-all shadow-inner"
+              className="w-full h-full pl-8 pr-7 bg-slate-900/90 border border-slate-800 focus:border-indigo-500/80 text-slate-200 placeholder-slate-500 rounded-xl text-xs outline-none transition-all shadow-inner"
             />
             {searchQuery && (
               <button
@@ -153,14 +153,14 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
           <button
             type="button"
             onClick={() => setIsGroupModalOpen(true)}
-            className="px-3 py-1.5 bg-slate-800/70 hover:bg-slate-800 text-slate-200 border border-slate-700/60 rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
+            className="h-10.5 px-3 bg-slate-800/70 hover:bg-slate-800 text-slate-200 border border-slate-700/60 rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
           >
             + Add Group
           </button>
           <button
             type="button"
             onClick={() => setIsParticipantModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 h-10.5 px-3.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
