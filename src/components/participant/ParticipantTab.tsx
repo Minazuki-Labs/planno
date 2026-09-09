@@ -1,36 +1,14 @@
 import { useState, useMemo, useEffect } from "react";
-import { ParticipantItem, ParticipantRole } from "../../types/participant";
+import { ParticipantItem } from "../../types/participant";
 import { useEventStore } from "../../store/useEventStore";
+import { ParticipantHeader } from "./ParticipantHeader";
+import { ParticipantGroupCard } from "./ParticipantGroupCard";
+import { AddGroupModal } from "./AddGroupModal";
+import { AddParticipantModal } from "./AddParticipantModal";
 
 interface ParticipantTabProps {
   eventId: string;
 }
-
-const ROLE_BADGES: Record<ParticipantRole, { label: string; className: string }> = {
-  teacher: {
-    label: "Teacher",
-    className: "bg-purple-950/40 border-purple-500/30 text-purple-300",
-  },
-  leader: {
-    label: "Leader",
-    className: "bg-indigo-950/40 border-indigo-500/30 text-indigo-300",
-  },
-  co_leader: {
-    label: "Co-Leader",
-    className: "bg-sky-950/40 border-sky-500/30 text-sky-300",
-  },
-  member: {
-    label: "Member",
-    className: "bg-slate-800/60 border-slate-700/60 text-slate-400",
-  },
-};
-
-const ROLE_ORDER: Record<ParticipantRole, number> = {
-  teacher: 0,
-  leader: 1,
-  co_leader: 2,
-  member: 3,
-};
 
 export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const {
@@ -46,25 +24,12 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
-
-  // Group Form state
-  const [newGroupName, setNewGroupName] = useState("");
-
-  // Participant Form state
-  const [newParticipantName, setNewParticipantName] = useState("");
-  const [selectedRole, setSelectedRole] = useState<ParticipantRole>("member");
-  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
-
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   const toggleCollapse = (groupId: string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev);
-      if (next.has(groupId)) {
-        next.delete(groupId);
-      } else {
-        next.add(groupId);
-      }
+      next.has(groupId) ? next.delete(groupId) : next.add(groupId);
       return next;
     });
   };
@@ -98,100 +63,17 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
     return map;
   }, [groups, filteredParticipants]);
 
-  const handleCreateGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newGroupName.trim()) return;
-
-    await createGroup({
-      id: crypto.randomUUID(),
-      eventId,
-      name: newGroupName.trim(),
-    });
-
-    setNewGroupName("");
-    setIsGroupModalOpen(false);
-  };
-
-  const handleCreateParticipant = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newParticipantName.trim()) return;
-
-    await createParticipant({
-      id: crypto.randomUUID(),
-      eventId,
-      name: newParticipantName.trim(),
-      role: selectedRole,
-      groupId: selectedGroupId || null,
-    });
-
-    setNewParticipantName("");
-    setSelectedRole("member");
-    setSelectedGroupId("");
-    setIsParticipantModalOpen(false);
-  };
+  const unassigned = groupedData.get(null) || [];
 
   return (
     <div className="space-y-6">
-      {/* Tab Control Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/60">
-        <div>
-          <span className="text-[10px] font-extrabold tracking-widest text-indigo-400 uppercase">
-            Roster & Teams
-          </span>
-          <h2 className="text-xl font-bold text-slate-100 mt-0.5">Participants</h2>
-        </div>
+      <ParticipantHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onOpenGroupModal={() => setIsGroupModalOpen(true)}
+        onOpenParticipantModal={() => setIsParticipantModalOpen(true)}
+      />
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Search Bar */}
-          <div className="relative flex-1 sm:w-56 h-10.5">
-            <svg
-              className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search participant..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-full pl-8 pr-7 bg-slate-900/90 border border-slate-800 focus:border-indigo-500/80 text-slate-200 placeholder-slate-500 rounded-xl text-xs outline-none transition-all shadow-inner"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <button
-            type="button"
-            onClick={() => setIsGroupModalOpen(true)}
-            className="h-10.5 px-3 bg-slate-800/70 hover:bg-slate-800 text-slate-200 border border-slate-700/60 rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
-          >
-            + Add Group
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsParticipantModalOpen(true)}
-            className="inline-flex items-center gap-1.5 h-10.5 px-3.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Add Participant</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Group Sections */}
       {groups.length === 0 && participants.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-slate-800/70 rounded-2xl bg-slate-900/30">
           <div className="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center mb-3 text-slate-400">
@@ -204,318 +86,46 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {groups.map((group) => {
-            const members = groupedData.get(group.id) || [];
-            const isCollapsed = collapsedGroups.has(group.id);
+          {groups.map((group) => (
+            <ParticipantGroupCard
+              key={group.id}
+              title={group.name}
+              members={groupedData.get(group.id) || []}
+              isCollapsed={collapsedGroups.has(group.id)}
+              onToggleCollapse={() => toggleCollapse(group.id)}
+              onDeleteParticipant={deleteParticipant}
+            />
+          ))}
 
-            return (
-              <div
-                key={group.id}
-                className="w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-lg transition-all"
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleCollapse(group.id)}
-                  className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-900/90 hover:bg-slate-900 border-b border-slate-800/70 transition-colors cursor-pointer text-left group/btn"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="font-semibold text-sm text-slate-100">{group.name}</span>
-                    <span className="text-[11px] bg-slate-800 border border-slate-700/50 text-slate-300 px-2.5 py-0.5 rounded-full font-medium">
-                      {members.length} {members.length === 1 ? "member" : "members"}
-                    </span>
-                  </div>
-
-                  <svg
-                    className={`w-4 h-4 text-slate-400 group-hover/btn:text-slate-200 transition-transform duration-200 ${
-                      isCollapsed ? "-rotate-90" : "rotate-0"
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Collapsible Content */}
-                {!isCollapsed && (
-                  <div className="p-3 flex flex-col gap-2.5">
-                    {members.length === 0 ? (
-                      <div className="h-16 flex items-center justify-center border border-dashed border-slate-800/60 rounded-xl bg-slate-950/20">
-                        <p className="text-xs text-slate-500 italic">No members assigned to this group.</p>
-                      </div>
-                    ) : (
-                      (() => {
-                        const teachers = members.filter((m) => m.role === "teacher");
-                        const nonTeachers = members
-                          .filter((m) => m.role !== "teacher")
-                          .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role]);
-
-                        return (
-                          <>
-                            {teachers.map((person) => (
-                              <ParticipantRow
-                                key={person.id}
-                                person={person}
-                                onDelete={deleteParticipant}
-                              />
-                            ))}
-
-                            {teachers.length > 0 && nonTeachers.length > 0 && (
-                              <div className="relative my-1">
-                                <div className="border-t border-slate-800/80" />
-                              </div>
-                            )}
-
-                            {nonTeachers.map((person) => (
-                              <ParticipantRow
-                                key={person.id}
-                                person={person}
-                                onDelete={deleteParticipant}
-                              />
-                            ))}
-                          </>
-                        );
-                      })()
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Unassigned / No Group */}
-          {(groupedData.get(null)?.length || 0) > 0 && (() => {
-            const isCollapsed = collapsedGroups.has("unassigned");
-            const unassignedList = groupedData.get(null) || [];
-
-            return (
-              <div className="w-full bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => toggleCollapse("unassigned")}
-                  className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-900/60 hover:bg-slate-900/80 border-b border-slate-800/60 transition-colors cursor-pointer text-left group/btn"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="font-semibold text-xs uppercase tracking-wider text-slate-400">Unassigned</span>
-                    <span className="text-[11px] bg-slate-800/90 border border-slate-700/50 text-slate-400 px-2.5 py-0.5 rounded-full font-medium">
-                      {unassignedList.length}
-                    </span>
-                  </div>
-
-                  <svg
-                    className={`w-4 h-4 text-slate-400 group-hover/btn:text-slate-200 transition-transform duration-200 ${
-                      isCollapsed ? "-rotate-90" : "rotate-0"
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {!isCollapsed && (
-                  <div className="p-3 flex flex-col gap-2.5">
-                    {(() => {
-                      const teachers = unassignedList.filter((m) => m.role === "teacher");
-                      const nonTeachers = unassignedList
-                        .filter((m) => m.role !== "teacher")
-                        .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role]);
-
-                      return (
-                        <>
-                          {teachers.map((person) => (
-                            <ParticipantRow
-                              key={person.id}
-                              person={person}
-                              onDelete={deleteParticipant}
-                            />
-                          ))}
-
-                          {teachers.length > 0 && nonTeachers.length > 0 && (
-                            <div className="border-t border-slate-800/80 my-1" />
-                          )}
-
-                          {nonTeachers.map((person) => (
-                            <ParticipantRow
-                              key={person.id}
-                              person={person}
-                              onDelete={deleteParticipant}
-                            />
-                          ))}
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          {unassigned.length > 0 && (
+            <ParticipantGroupCard
+              title="Unassigned"
+              members={unassigned}
+              isCollapsed={collapsedGroups.has("unassigned")}
+              isUnassigned
+              onToggleCollapse={() => toggleCollapse("unassigned")}
+              onDeleteParticipant={deleteParticipant}
+            />
+          )}
         </div>
       )}
 
-      {/* Add Group Modal */}
-      {isGroupModalOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-150"
-          onClick={(e) => e.target === e.currentTarget && setIsGroupModalOpen(false)}
-        >
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
-              <h2 className="text-sm font-semibold text-slate-100">Add New Group</h2>
-              <button 
-                onClick={() => setIsGroupModalOpen(false)}
-                className="text-slate-400 hover:text-slate-200 text-xs font-mono"
-              >
-                ESC
-              </button>
-            </div>
-            <form onSubmit={handleCreateGroup} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
-                  Group Name <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Alpha Team"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
-                  autoFocus
-                />
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
-                <button
-                  type="button"
-                  onClick={() => setIsGroupModalOpen(false)}
-                  className="px-3.5 py-1.5 text-xs text-slate-400 hover:text-slate-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-sm"
-                >
-                  Add Group
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddGroupModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        onSubmit={async (name) => {
+          await createGroup({ id: crypto.randomUUID(), eventId, name });
+        }}
+      />
 
-      {/* Add Participant Modal */}
-      {isParticipantModalOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-150"
-          onClick={(e) => e.target === e.currentTarget && setIsParticipantModalOpen(false)}
-        >
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
-              <h2 className="text-sm font-semibold text-slate-100">Add Participant</h2>
-              <button 
-                onClick={() => setIsParticipantModalOpen(false)}
-                className="text-slate-400 hover:text-slate-200 text-xs font-mono"
-              >
-                ESC
-              </button>
-            </div>
-            <form onSubmit={handleCreateParticipant} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
-                  Name <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Jane Doe"
-                  value={newParticipantName}
-                  onChange={(e) => setNewParticipantName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1.5">Role</label>
-                <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value as ParticipantRole)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
-                >
-                  <option value="member">Member</option>
-                  <option value="co_leader">Co-Leader</option>
-                  <option value="leader">Leader</option>
-                  <option value="teacher">Teacher</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-medium text-slate-400 mb-1.5">Group Assignment</label>
-                <select
-                  value={selectedGroupId}
-                  onChange={(e) => setSelectedGroupId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg px-3 py-2 text-xs text-slate-100 outline-none transition-all"
-                >
-                  <option value="">No Group (Unassigned)</option>
-                  {groups.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
-                <button
-                  type="button"
-                  onClick={() => setIsParticipantModalOpen(false)}
-                  className="px-3.5 py-1.5 text-xs text-slate-400 hover:text-slate-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-sm"
-                >
-                  Add Participant
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface ParticipantRowProps {
-  person: ParticipantItem;
-  onDelete?: (id: string) => void;
-}
-
-const ParticipantRow = ({ person, onDelete }: ParticipantRowProps) => {
-  const badge = ROLE_BADGES[person.role] || ROLE_BADGES.member;
-
-  return (
-    <div className="group flex items-center justify-between p-2 rounded-xl bg-slate-950/40 hover:bg-slate-950/70 border border-slate-800/40 hover:border-slate-700/60 transition-all">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-slate-200">{person.name}</span>
-        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md border ${badge.className}`}>
-          {badge.label}
-        </span>
-      </div>
-
-      {onDelete && (
-        <button
-          type="button"
-          onClick={() => onDelete(person.id)}
-          className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 p-1 transition-opacity text-xs"
-          title="Remove participant"
-        >
-          ✕
-        </button>
-      )}
+      <AddParticipantModal
+        isOpen={isParticipantModalOpen}
+        groups={groups}
+        onClose={() => setIsParticipantModalOpen(false)}
+        onSubmit={async (data) => {
+          await createParticipant({ id: crypto.randomUUID(), eventId, ...data });
+        }}
+      />
     </div>
   );
 };
