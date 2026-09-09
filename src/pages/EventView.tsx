@@ -208,7 +208,7 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
             <h3 className="text-base font-bold text-white">Delete Event</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Are you sure you want to delete <span className="text-slate-200 font-semibold">"{event.name}"</span>? This action is permanent and cannot be undone.[cite: 2]
+              Are you sure you want to delete <span className="text-slate-200 font-semibold">"{event.name}"</span>? This action is permanent and cannot be undone.
             </p>
             <div className="flex items-center justify-end gap-3 pt-2">
               <button

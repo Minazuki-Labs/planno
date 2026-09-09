@@ -31,7 +31,6 @@ const formatTimestampToDisplay = (timestampStr: string): string => {
 
 export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     name: event.name,
     location: event.location || "",
@@ -43,7 +42,6 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
 
   const handleStartEdit = () => {
     setIsEditing(true);
-    setShowDeleteConfirm(false);
     setFormData({
       name: event.name,
       location: event.location || "",
@@ -211,30 +209,10 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
               Save Changes
             </button>
           </div>
-        ) : showDeleteConfirm ? (
-          <div className="flex items-center space-x-2 animate-in fade-in duration-200">
-            <span className="text-xs text-slate-400 mr-2 font-medium">
-              Are you sure?
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(false)}
-              className="px-3 py-1.5 text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={onDelete}
-              className="px-3 py-1.5 text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white rounded-lg shadow-lg shadow-rose-600/20 transition-all active:scale-[0.98]"
-            >
-              Confirm Delete
-            </button>
-          </div>
         ) : (
           <button
             type="button"
-            onClick={() => setShowDeleteConfirm(true)}
+            onClick={onDelete}
             className="px-3.5 py-2 text-xs font-semibold text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer min-h-[36px]"
           >
             Delete Event
