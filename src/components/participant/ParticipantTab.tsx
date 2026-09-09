@@ -182,27 +182,29 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
           <p className="text-xs text-slate-400 mt-1">Create groups and add members to organise your roster.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
-          {/* Render Groups */}
+        <div className="flex flex-col gap-6">
           {groups.map((group) => {
             const members = groupedData.get(group.id) || [];
             return (
               <div
                 key={group.id}
-                className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col gap-3 backdrop-blur-md shadow-lg"
+                className="w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-lg"
               >
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-slate-200">{group.name}</span>
-                    <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-medium">
-                      {members.length}
+                {/* Group Header Banner */}
+                <div className="flex items-center justify-between px-5 py-4 bg-slate-900/90 border-b border-slate-800/70">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-semibold text-sm text-slate-100">{group.name}</span>
+                    <span className="text-[11px] bg-slate-800 border border-slate-700/50 text-slate-300 px-2.5 py-0.5 rounded-full font-medium">
+                      {members.length} {members.length === 1 ? "member" : "members"}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-1.5 min-h-[40px]">
+                <div className="p-3 flex flex-col gap-2.5">
                   {members.length === 0 ? (
-                    <p className="text-xs text-slate-500 italic py-2">No members assigned.</p>
+                    <div className="h-16 flex items-center justify-center border border-dashed border-slate-800/60 rounded-xl bg-slate-950/20">
+                      <p className="text-xs text-slate-500 italic">No members assigned to this group.</p>
+                    </div>
                   ) : (
                     members.map((person) => (
                       <ParticipantRow
@@ -217,19 +219,19 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
             );
           })}
 
-          {/* Render Unassigned / No Group */}
+          {/* Unassigned / No Group */}
           {(groupedData.get(null)?.length || 0) > 0 && (
-            <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800/60">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-xs uppercase tracking-wider text-slate-400">Unassigned</span>
-                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-medium">
+            <div className="w-full bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-5 py-4 bg-slate-900/60 border-b border-slate-800/60">
+                <div className="flex items-center gap-2.5">
+                  <span className="font-semibold text-xs uppercase tracking-wider text-slate-400">Unassigned</span>
+                  <span className="text-[11px] bg-slate-800/90 border border-slate-700/50 text-slate-400 px-2.5 py-0.5 rounded-full font-medium">
                     {groupedData.get(null)?.length || 0}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="p-3 flex flex-col gap-2.5">
                 {groupedData.get(null)?.map((person) => (
                   <ParticipantRow
                     key={person.id}
