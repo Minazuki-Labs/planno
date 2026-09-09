@@ -25,6 +25,13 @@ const ROLE_BADGES: Record<ParticipantRole, { label: string; className: string }>
   },
 };
 
+const ROLE_ORDER: Record<ParticipantRole, number> = {
+  teacher: 0,
+  leader: 1,
+  co_leader: 2,
+  member: 3,
+};
+
 export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const {
     groups,
@@ -47,6 +54,20 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const [newParticipantName, setNewParticipantName] = useState("");
   const [selectedRole, setSelectedRole] = useState<ParticipantRole>("member");
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const toggleCollapse = (groupId: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (eventId) {
@@ -185,63 +206,152 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
         <div className="flex flex-col gap-6">
           {groups.map((group) => {
             const members = groupedData.get(group.id) || [];
+            const isCollapsed = collapsedGroups.has(group.id);
+
             return (
               <div
                 key={group.id}
-                className="w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-lg"
+                className="w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-lg transition-all"
               >
-                {/* Group Header Banner */}
-                <div className="flex items-center justify-between px-5 py-4 bg-slate-900/90 border-b border-slate-800/70">
+                <button
+                  type="button"
+                  onClick={() => toggleCollapse(group.id)}
+                  className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-900/90 hover:bg-slate-900 border-b border-slate-800/70 transition-colors cursor-pointer text-left group/btn"
+                >
                   <div className="flex items-center gap-2.5">
                     <span className="font-semibold text-sm text-slate-100">{group.name}</span>
                     <span className="text-[11px] bg-slate-800 border border-slate-700/50 text-slate-300 px-2.5 py-0.5 rounded-full font-medium">
                       {members.length} {members.length === 1 ? "member" : "members"}
                     </span>
                   </div>
-                </div>
 
-                <div className="p-3 flex flex-col gap-2.5">
-                  {members.length === 0 ? (
-                    <div className="h-16 flex items-center justify-center border border-dashed border-slate-800/60 rounded-xl bg-slate-950/20">
-                      <p className="text-xs text-slate-500 italic">No members assigned to this group.</p>
-                    </div>
-                  ) : (
-                    members.map((person) => (
-                      <ParticipantRow
-                        key={person.id}
-                        person={person}
-                        onDelete={deleteParticipant}
-                      />
-                    ))
-                  )}
-                </div>
+                  <svg
+                    className={`w-4 h-4 text-slate-400 group-hover/btn:text-slate-200 transition-transform duration-200 ${
+                      isCollapsed ? "-rotate-90" : "rotate-0"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Collapsible Content */}
+                {!isCollapsed && (
+                  <div className="p-3 flex flex-col gap-2.5">
+                    {members.length === 0 ? (
+                      <div className="h-16 flex items-center justify-center border border-dashed border-slate-800/60 rounded-xl bg-slate-950/20">
+                        <p className="text-xs text-slate-500 italic">No members assigned to this group.</p>
+                      </div>
+                    ) : (
+                      (() => {
+                        const teachers = members.filter((m) => m.role === "teacher");
+                        const nonTeachers = members
+                          .filter((m) => m.role !== "teacher")
+                          .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role]);
+
+                        return (
+                          <>
+                            {teachers.map((person) => (
+                              <ParticipantRow
+                                key={person.id}
+                                person={person}
+                                onDelete={deleteParticipant}
+                              />
+                            ))}
+
+                            {teachers.length > 0 && nonTeachers.length > 0 && (
+                              <div className="relative my-1">
+                                <div className="border-t border-slate-800/80" />
+                              </div>
+                            )}
+
+                            {nonTeachers.map((person) => (
+                              <ParticipantRow
+                                key={person.id}
+                                person={person}
+                                onDelete={deleteParticipant}
+                              />
+                            ))}
+                          </>
+                        );
+                      })()
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
 
           {/* Unassigned / No Group */}
-          {(groupedData.get(null)?.length || 0) > 0 && (
-            <div className="w-full bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between px-5 py-4 bg-slate-900/60 border-b border-slate-800/60">
-                <div className="flex items-center gap-2.5">
-                  <span className="font-semibold text-xs uppercase tracking-wider text-slate-400">Unassigned</span>
-                  <span className="text-[11px] bg-slate-800/90 border border-slate-700/50 text-slate-400 px-2.5 py-0.5 rounded-full font-medium">
-                    {groupedData.get(null)?.length || 0}
-                  </span>
-                </div>
-              </div>
+          {(groupedData.get(null)?.length || 0) > 0 && (() => {
+            const isCollapsed = collapsedGroups.has("unassigned");
+            const unassignedList = groupedData.get(null) || [];
 
-              <div className="p-3 flex flex-col gap-2.5">
-                {groupedData.get(null)?.map((person) => (
-                  <ParticipantRow
-                    key={person.id}
-                    person={person}
-                    onDelete={deleteParticipant}
-                  />
-                ))}
+            return (
+              <div className="w-full bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => toggleCollapse("unassigned")}
+                  className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-900/60 hover:bg-slate-900/80 border-b border-slate-800/60 transition-colors cursor-pointer text-left group/btn"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-semibold text-xs uppercase tracking-wider text-slate-400">Unassigned</span>
+                    <span className="text-[11px] bg-slate-800/90 border border-slate-700/50 text-slate-400 px-2.5 py-0.5 rounded-full font-medium">
+                      {unassignedList.length}
+                    </span>
+                  </div>
+
+                  <svg
+                    className={`w-4 h-4 text-slate-400 group-hover/btn:text-slate-200 transition-transform duration-200 ${
+                      isCollapsed ? "-rotate-90" : "rotate-0"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {!isCollapsed && (
+                  <div className="p-3 flex flex-col gap-2.5">
+                    {(() => {
+                      const teachers = unassignedList.filter((m) => m.role === "teacher");
+                      const nonTeachers = unassignedList
+                        .filter((m) => m.role !== "teacher")
+                        .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role]);
+
+                      return (
+                        <>
+                          {teachers.map((person) => (
+                            <ParticipantRow
+                              key={person.id}
+                              person={person}
+                              onDelete={deleteParticipant}
+                            />
+                          ))}
+
+                          {teachers.length > 0 && nonTeachers.length > 0 && (
+                            <div className="border-t border-slate-800/80 my-1" />
+                          )}
+
+                          {nonTeachers.map((person) => (
+                            <ParticipantRow
+                              key={person.id}
+                              person={person}
+                              onDelete={deleteParticipant}
+                            />
+                          ))}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
