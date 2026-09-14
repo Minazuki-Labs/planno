@@ -6,6 +6,7 @@ export interface GroupSlice {
   groups: GroupItem[];
   fetchGroups: (eventId: string) => Promise<void>;
   createGroup: (group: GroupItem) => Promise<void>;
+  updateGroup: (id: string, name: string) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
 }
 
@@ -28,6 +29,19 @@ export const createGroupSlice: StateSlice<GroupSlice> = (set, get) => ({
       await invoke("create_group", { item: group });
     } catch (err) {
       console.error("Failed to create group:", err);
+      set({ groups: previous });
+    }
+  },
+
+  updateGroup: async (id, name) => {
+    const previous = get().groups;
+    set({
+      groups: previous.map((g) => (g.id === id ? { ...g, name } : g)),
+    });
+    try {
+      await invoke("update_group", { id, name });
+    } catch (err) {
+      console.error("Failed to update group:", err);
       set({ groups: previous });
     }
   },

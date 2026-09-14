@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { ParticipantItem } from "../../types/participant";
 import { ROLE_ORDER } from "./participantConstants";
 import { ParticipantRow } from "./ParticipantRow";
@@ -10,6 +10,7 @@ interface ParticipantGroupCardProps {
   isUnassigned?: boolean;
   onToggleCollapse: () => void;
   onDeleteParticipant: (id: string) => void;
+  onRename?: (newName: string) => void;
 }
 
 export const ParticipantGroupCard = ({
@@ -19,7 +20,43 @@ export const ParticipantGroupCard = ({
   isUnassigned = false,
   onToggleCollapse,
   onDeleteParticipant,
+  onRename,
 }: ParticipantGroupCardProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempTitle, setTempTitle] = useState(title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setTempTitle(title);
+  }, [title]);
+
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [isEditing]);
+
+  const handleCommitRename = () => {
+    const trimmed = tempTitle.trim();
+    if (trimmed && trimmed !== title && onRename) {
+      onRename(trimmed);
+    } else {
+      setTempTitle(title);
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleCommitRename();
+    } else if (e.key === "Escape") {
+      setTempTitle(title);
+      setIsEditing(false);
+    }
+  };
+
   const { teachers, nonTeachers } = useMemo(() => {
     return {
       teachers: members.filter((m) => m.role === "teacher"),
@@ -41,9 +78,36 @@ export const ParticipantGroupCard = ({
         className="w-full flex items-center justify-between px-5 py-3.5 bg-slate-900/90 hover:bg-slate-900 border-b border-slate-800/70 transition-colors cursor-pointer text-left group/btn"
       >
         <div className="flex items-center gap-2.5">
-          <span className={`font-semibold ${isUnassigned ? "text-xs uppercase tracking-wider text-slate-400" : "text-sm text-slate-100"}`}>
-            {title}
-          </span>
+          {isEditing && !isUnassigned ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={tempTitle}
+              onChange={(e) => setTempTitle(e.target.value)}
+              onBlur={handleCommitRename}
+              onKeyDown={handleKeyDown}
+              onClick={(e) => e.stopPropagation()} // Prevent toggling accordion
+              className="bg-slate-800 border border-indigo-500 text-slate-100 text-sm font-semibold rounded px-1.5 py-0.5 outline-none"
+            />
+          ) : (
+            <span
+              onDoubleClick={(e) => {
+                if (!isUnassigned) {
+                  e.stopPropagation(); // Avoid triggering accordion collapse
+                  setIsEditing(true);
+                }
+              }}
+              title={!isUnassigned ? "Double click to rename" : undefined}
+              className={`font-semibold select-none ${
+                isUnassigned
+                  ? "text-xs uppercase tracking-wider text-slate-400"
+                  : "text-sm text-slate-100 hover:text-indigo-300"
+              }`}
+            >
+              {title}
+            </span>
+          )}
+
           <span className="text-[11px] bg-slate-800 border border-slate-700/50 text-slate-300 px-2.5 py-0.5 rounded-full font-medium">
             {members.length} {members.length === 1 ? "member" : "members"}
           </span>

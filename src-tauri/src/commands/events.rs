@@ -175,6 +175,18 @@ pub fn create_group(state: State<DbState>, item: GroupItem) -> Result<(), String
 }
 
 #[tauri::command]
+pub fn update_group(state: State<DbState>, id: String, name: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE groups SET name = ?1 WHERE id = ?2",
+        params![name, id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn delete_group(state: State<DbState>, id: String) -> Result<(), String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     conn.execute("DELETE FROM groups WHERE id = ?1", params![id])

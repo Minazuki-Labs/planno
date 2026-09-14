@@ -17,6 +17,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
     fetchGroups,
     fetchParticipants,
     createGroup,
+    updateGroup,
     createParticipant,
     deleteParticipant,
   } = useEventStore();
@@ -94,6 +95,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
               isCollapsed={collapsedGroups.has(group.id)}
               onToggleCollapse={() => toggleCollapse(group.id)}
               onDeleteParticipant={deleteParticipant}
+              onRename={(newName) => updateGroup(group.id, newName)}
             />
           ))}
 

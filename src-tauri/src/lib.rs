@@ -39,6 +39,7 @@ pub fn run() {
 
             commands::events::get_groups,
             commands::events::create_group,
+            commands::events::update_group,
             commands::events::delete_group,
 
             commands::events::get_participants,
