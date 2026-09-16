@@ -33,7 +33,7 @@ export const ParticipantRow = ({ person, onDelete }: ParticipantRowProps) => {
           type="button"
           {...listeners}
           {...attributes}
-          className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 p-0.5"
+          className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 p-0.5"
           title="Drag member"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
