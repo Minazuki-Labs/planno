@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { ParticipantItem } from "../../types/participant";
 import { useEventStore } from "../../store/useEventStore";
 import { ParticipantHeader } from "./ParticipantHeader";
 import { ParticipantGroupCard } from "./ParticipantGroupCard";
+import { ParticipantRow } from "./ParticipantRow";
 import { AddGroupModal } from "./AddGroupModal";
 import { AddParticipantModal } from "./AddParticipantModal";
 
@@ -18,6 +20,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
     fetchParticipants,
     createGroup,
     updateGroup,
+    updateParticipant,
     createParticipant,
     deleteParticipant,
   } = useEventStore();
@@ -26,6 +29,15 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [activeParticipant, setActiveParticipant] = useState<ParticipantItem | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
 
   const toggleCollapse = (groupId: string) => {
     setCollapsedGroups((prev) => {
@@ -64,43 +76,68 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
     return map;
   }, [groups, filteredParticipants]);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const item = participants.find((p) => p.id === event.active.id);
+    if (item) setActiveParticipant(item);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+  const { active, over } = event;
+  setActiveParticipant(null);
+
+  if (!over) return;
+
+  const participantId = active.id as string;
+  const targetGroupId = over.id === "unassigned" ? null : (over.id as string);
+
+  const currentParticipant = participants.find((p) => p.id === participantId);
+  if (!currentParticipant || currentParticipant.groupId === targetGroupId) return;
+
+  await updateParticipant({
+    ...currentParticipant,
+    groupId: targetGroupId,
+  });
+};
+
   const unassigned = groupedData.get(null) || [];
 
   return (
-    <div className="space-y-6">
-      <ParticipantHeader
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onOpenGroupModal={() => setIsGroupModalOpen(true)}
-        onOpenParticipantModal={() => setIsParticipantModalOpen(true)}
-      />
+    <DndContext
+      sensors={sensors}
+      autoScroll={{ threshold: { x: 0.1, y: 0.15 }, acceleration: 15 }}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="space-y-6">
+        <ParticipantHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenGroupModal={() => setIsGroupModalOpen(true)}
+          onOpenParticipantModal={() => setIsParticipantModalOpen(true)}
+        />
 
-      {groups.length === 0 && participants.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-slate-800/70 rounded-2xl bg-slate-900/30">
-          <div className="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center mb-3 text-slate-400">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+        {groups.length === 0 && participants.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-slate-800/70 rounded-2xl bg-slate-900/30">
+            <h3 className="text-sm font-semibold text-slate-200">No participants or groups yet</h3>
+            <p className="text-xs text-slate-400 mt-1">Create groups and add members to organise your roster.</p>
           </div>
-          <h3 className="text-sm font-semibold text-slate-200">No participants or groups yet</h3>
-          <p className="text-xs text-slate-400 mt-1">Create groups and add members to organise your roster.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {groups.map((group) => (
-            <ParticipantGroupCard
-              key={group.id}
-              title={group.name}
-              members={groupedData.get(group.id) || []}
-              isCollapsed={collapsedGroups.has(group.id)}
-              onToggleCollapse={() => toggleCollapse(group.id)}
-              onDeleteParticipant={deleteParticipant}
-              onRename={(newName) => updateGroup(group.id, newName)}
-            />
-          ))}
+        ) : (
+          <div className="flex flex-col gap-6">
+            {groups.map((group) => (
+              <ParticipantGroupCard
+                key={group.id}
+                id={group.id}
+                title={group.name}
+                members={groupedData.get(group.id) || []}
+                isCollapsed={collapsedGroups.has(group.id)}
+                onToggleCollapse={() => toggleCollapse(group.id)}
+                onDeleteParticipant={deleteParticipant}
+                onRename={(newName) => updateGroup(group.id, newName)}
+              />
+            ))}
 
-          {unassigned.length > 0 && (
             <ParticipantGroupCard
+              id="unassigned"
               title="Unassigned"
               members={unassigned}
               isCollapsed={collapsedGroups.has("unassigned")}
@@ -108,26 +145,34 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
               onToggleCollapse={() => toggleCollapse("unassigned")}
               onDeleteParticipant={deleteParticipant}
             />
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      <AddGroupModal
-        isOpen={isGroupModalOpen}
-        onClose={() => setIsGroupModalOpen(false)}
-        onSubmit={async (name) => {
-          await createGroup({ id: crypto.randomUUID(), eventId, name });
-        }}
-      />
+        <AddGroupModal
+          isOpen={isGroupModalOpen}
+          onClose={() => setIsGroupModalOpen(false)}
+          onSubmit={async (name) => {
+            await createGroup({ id: crypto.randomUUID(), eventId, name });
+          }}
+        />
 
-      <AddParticipantModal
-        isOpen={isParticipantModalOpen}
-        groups={groups}
-        onClose={() => setIsParticipantModalOpen(false)}
-        onSubmit={async (data) => {
-          await createParticipant({ id: crypto.randomUUID(), eventId, ...data });
-        }}
-      />
-    </div>
+        <AddParticipantModal
+          isOpen={isParticipantModalOpen}
+          groups={groups}
+          onClose={() => setIsParticipantModalOpen(false)}
+          onSubmit={async (data) => {
+            await createParticipant({ id: crypto.randomUUID(), eventId, ...data });
+          }}
+        />
+      </div>
+
+      <DragOverlay>
+        {activeParticipant ? (
+          <div className="opacity-90 shadow-2xl scale-[1.02] pointer-events-none">
+            <ParticipantRow person={activeParticipant} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };

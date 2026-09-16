@@ -1,9 +1,11 @@
 import { useMemo, useState, useRef, useEffect } from "react";
+import { useDroppable } from "@dnd-kit/core";
 import { ParticipantItem } from "../../types/participant";
 import { ROLE_ORDER } from "./participantConstants";
 import { ParticipantRow } from "./ParticipantRow";
 
 interface ParticipantGroupCardProps {
+  id: string;
   title: string;
   members: ParticipantItem[];
   isCollapsed: boolean;
@@ -14,6 +16,7 @@ interface ParticipantGroupCardProps {
 }
 
 export const ParticipantGroupCard = ({
+  id,
   title,
   members,
   isCollapsed,
@@ -22,6 +25,11 @@ export const ParticipantGroupCard = ({
   onDeleteParticipant,
   onRename,
 }: ParticipantGroupCardProps) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+    data: { groupId: isUnassigned ? null : id },
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const [tempTitle, setTempTitle] = useState(title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -67,11 +75,15 @@ export const ParticipantGroupCard = ({
   }, [members]);
 
   const containerStyle = isUnassigned
-    ? "w-full bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl overflow-hidden shadow-sm"
-    : "w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-lg transition-all";
+    ? `w-full bg-slate-900/40 border border-dashed rounded-2xl overflow-hidden shadow-sm transition-colors ${
+        isOver ? "border-indigo-500/80 bg-indigo-950/20" : "border-slate-800"
+      }`
+    : `w-full bg-slate-900/60 border rounded-2xl overflow-hidden backdrop-blur-md shadow-lg transition-all ${
+        isOver ? "border-indigo-500/80 ring-2 ring-indigo-500/20" : "border-slate-800/80"
+      }`;
 
   return (
-    <div className={containerStyle}>
+    <div ref={setNodeRef} className={containerStyle}>
       <button
         type="button"
         onClick={onToggleCollapse}
@@ -86,14 +98,14 @@ export const ParticipantGroupCard = ({
               onChange={(e) => setTempTitle(e.target.value)}
               onBlur={handleCommitRename}
               onKeyDown={handleKeyDown}
-              onClick={(e) => e.stopPropagation()} // Prevent toggling accordion
+              onClick={(e) => e.stopPropagation()}
               className="bg-slate-800 border border-indigo-500 text-slate-100 text-sm font-semibold rounded px-1.5 py-0.5 outline-none"
             />
           ) : (
             <span
               onDoubleClick={(e) => {
                 if (!isUnassigned) {
-                  e.stopPropagation(); // Avoid triggering accordion collapse
+                  e.stopPropagation();
                   setIsEditing(true);
                 }
               }}
@@ -126,10 +138,12 @@ export const ParticipantGroupCard = ({
       </button>
 
       {!isCollapsed && (
-        <div className="p-3 flex flex-col gap-2.5">
+        <div className="p-3 flex flex-col gap-2.5 min-h-[60px]">
           {members.length === 0 ? (
             <div className="h-16 flex items-center justify-center border border-dashed border-slate-800/60 rounded-xl bg-slate-950/20">
-              <p className="text-xs text-slate-500 italic">No members assigned to this group.</p>
+              <p className="text-xs text-slate-500 italic">
+                {isUnassigned ? "Drop here to unassign members" : "Drop members here"}
+              </p>
             </div>
           ) : (
             <>
