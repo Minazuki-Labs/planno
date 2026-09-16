@@ -42,9 +42,12 @@ export const ParticipantRow = ({ person, onDelete }: ParticipantRowProps) => {
         </button>
 
         <span className="text-xs font-medium text-slate-200">{person.name}</span>
-        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md border ${badge.className}`}>
-          {badge.label}
-        </span>
+
+        {person.role !== "member" && badge && (
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md border ${badge.className}`}>
+            {badge.label}
+          </span>
+        )}
       </div>
 
       {onDelete && (

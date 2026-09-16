@@ -28,7 +28,6 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [activeParticipant, setActiveParticipant] = useState<ParticipantItem | null>(null);
 
   const sensors = useSensors(
@@ -38,14 +37,6 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
       },
     })
   );
-
-  const toggleCollapse = (groupId: string) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      next.has(groupId) ? next.delete(groupId) : next.add(groupId);
-      return next;
-    });
-  };
 
   useEffect(() => {
     if (eventId) {
@@ -82,33 +73,33 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-  const { active, over } = event;
-  setActiveParticipant(null);
+    const { active, over } = event;
+    setActiveParticipant(null);
 
-  if (!over) return;
+    if (!over) return;
 
-  const participantId = active.id as string;
-  const targetGroupId = over.id === "unassigned" ? null : (over.id as string);
+    const participantId = active.id as string;
+    const targetGroupId = over.id === "unassigned" ? null : (over.id as string);
 
-  const currentParticipant = participants.find((p) => p.id === participantId);
-  if (!currentParticipant || currentParticipant.groupId === targetGroupId) return;
+    const currentParticipant = participants.find((p) => p.id === participantId);
+    if (!currentParticipant || currentParticipant.groupId === targetGroupId) return;
 
-  await updateParticipant({
-    ...currentParticipant,
-    groupId: targetGroupId,
-  });
-};
+    await updateParticipant({
+      ...currentParticipant,
+      groupId: targetGroupId,
+    });
+  };
 
   const unassigned = groupedData.get(null) || [];
 
   return (
     <DndContext
       sensors={sensors}
-      autoScroll={{ threshold: { x: 0.1, y: 0.15 }, acceleration: 15 }}
+      autoScroll={{ threshold: { x: 0.15, y: 0.15 }, acceleration: 15 }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-6">
+      <div className="flex flex-col h-full space-y-6">
         <ParticipantHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -122,15 +113,13 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
             <p className="text-xs text-slate-400 mt-1">Create groups and add members to organise your roster.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-row gap-5 overflow-x-auto pb-4 items-start scrollbar-thin scrollbar-thumb-slate-800">
             {groups.map((group) => (
               <ParticipantGroupCard
                 key={group.id}
                 id={group.id}
                 title={group.name}
                 members={groupedData.get(group.id) || []}
-                isCollapsed={collapsedGroups.has(group.id)}
-                onToggleCollapse={() => toggleCollapse(group.id)}
                 onDeleteParticipant={deleteParticipant}
                 onRename={(newName) => updateGroup(group.id, newName)}
               />
@@ -140,9 +129,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
               id="unassigned"
               title="Unassigned"
               members={unassigned}
-              isCollapsed={collapsedGroups.has("unassigned")}
               isUnassigned
-              onToggleCollapse={() => toggleCollapse("unassigned")}
               onDeleteParticipant={deleteParticipant}
             />
           </div>
@@ -168,7 +155,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
 
       <DragOverlay>
         {activeParticipant ? (
-          <div className="opacity-90 shadow-2xl scale-[1.02] pointer-events-none">
+          <div className="opacity-90 shadow-2xl scale-[1.02] pointer-events-none w-72">
             <ParticipantRow person={activeParticipant} />
           </div>
         ) : null}
