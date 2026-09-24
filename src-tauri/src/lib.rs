@@ -32,21 +32,21 @@ pub fn run() {
             commands::events::delete_event,
             commands::events::update_event,
 
-            commands::events::get_activities,
-            commands::events::create_activity,
-            commands::events::delete_activity,
-            commands::events::update_activity,
+            commands::activities::get_activities,
+            commands::activities::create_activity,
+            commands::activities::delete_activity,
+            commands::activities::update_activity,
 
-            commands::events::get_groups,
-            commands::events::create_group,
-            commands::events::update_group,
-            commands::events::reorder_groups,
-            commands::events::delete_group,
+            commands::groups::get_groups,
+            commands::groups::create_group,
+            commands::groups::update_group,
+            commands::groups::reorder_groups,
+            commands::groups::delete_group,
 
-            commands::events::get_participants,
-            commands::events::create_participant,
-            commands::events::delete_participant,
-            commands::events::update_participant,
+            commands::participants::get_participants,
+            commands::participants::create_participant,
+            commands::participants::delete_participant,
+            commands::participants::update_participant,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
