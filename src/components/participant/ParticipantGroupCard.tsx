@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
-import { useDroppable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { ParticipantItem } from "../../types/participant";
 import { ROLE_ORDER } from "./participantConstants";
 import { ParticipantRow } from "./ParticipantRow";
@@ -21,9 +22,10 @@ export const ParticipantGroupCard = ({
   onDeleteParticipant,
   onRename,
 }: ParticipantGroupCardProps) => {
-  const { setNodeRef, isOver } = useDroppable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } = useSortable({
     id,
-    data: { groupId: isUnassigned ? null : id },
+    disabled: isUnassigned,
+    data: { type: "group", groupId: isUnassigned ? null : id },
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -70,6 +72,12 @@ export const ParticipantGroupCard = ({
     };
   }, [members]);
 
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
   const containerStyle = isUnassigned
     ? `w-80 shrink-0 flex flex-col max-h-[calc(100vh-220px)] bg-slate-900/40 border border-dashed rounded-2xl overflow-hidden shadow-sm transition-colors ${
         isOver ? "border-indigo-500/80 bg-indigo-950/20" : "border-slate-800"
@@ -79,10 +87,29 @@ export const ParticipantGroupCard = ({
       }`;
 
   return (
-    <div ref={setNodeRef} className={containerStyle}>
+    <div ref={setNodeRef} style={style} className={containerStyle}>
       {/* Group Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-900/90 border-b border-slate-800/70 select-none">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center justify-between px-3 py-3 bg-slate-900/90 border-b border-slate-800/70 select-none">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {!isUnassigned && (
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 p-0.5 rounded touch-none"
+              title="Drag to reorder group"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="9" cy="5" r="2" />
+                <circle cx="9" cy="12" r="2" />
+                <circle cx="9" cy="19" r="2" />
+                <circle cx="15" cy="5" r="2" />
+                <circle cx="15" cy="12" r="2" />
+                <circle cx="15" cy="19" r="2" />
+              </svg>
+            </button>
+          )}
+
           {isEditing && !isUnassigned ? (
             <input
               ref={inputRef}

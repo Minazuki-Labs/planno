@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import { ParticipantItem } from "../../types/participant";
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, closestCenter } from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { ParticipantItem, GroupItem } from "../../types/participant";
 import { useEventStore } from "../../store/useEventStore";
 import { ParticipantHeader } from "./ParticipantHeader";
 import { ParticipantGroupCard } from "./ParticipantGroupCard";
@@ -20,6 +21,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
     fetchParticipants,
     createGroup,
     updateGroup,
+    reorderGroups,
     updateParticipant,
     createParticipant,
     deleteParticipant,
@@ -29,6 +31,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
   const [activeParticipant, setActiveParticipant] = useState<ParticipantItem | null>(null);
+  const [activeGroup, setActiveGroup] = useState<GroupItem | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -68,16 +71,41 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   }, [groups, filteredParticipants]);
 
   const handleDragStart = (event: DragStartEvent) => {
-    const item = participants.find((p) => p.id === event.active.id);
+    const { active } = event;
+    const isGroup = active.data?.current?.type === "group";
+
+    if (isGroup) {
+      const g = groups.find((grp) => grp.id === active.id);
+      if (g) setActiveGroup(g);
+      return;
+    }
+
+    const item = participants.find((p) => p.id === active.id);
     if (item) setActiveParticipant(item);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveParticipant(null);
+    setActiveGroup(null);
 
     if (!over) return;
 
+    // Reorder group
+    if (active.data?.current?.type === "group") {
+      if (active.id !== over.id) {
+        const oldIndex = groups.findIndex((g) => g.id === active.id);
+        const newIndex = groups.findIndex((g) => g.id === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const reordered = arrayMove(groups, oldIndex, newIndex);
+          await reorderGroups(reordered.map((g) => g.id));
+        }
+      }
+      return;
+    }
+
+    // Drag participant
     const participantId = active.id as string;
     const targetGroupId = over.id === "unassigned" ? null : (over.id as string);
 
@@ -95,6 +123,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={closestCenter}
       autoScroll={{ threshold: { x: 0.15, y: 0.15 }, acceleration: 15 }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -114,16 +143,18 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
           </div>
         ) : (
           <div className="flex flex-row gap-5 overflow-x-auto pb-4 items-start scrollbar-thin scrollbar-thumb-slate-800">
-            {groups.map((group) => (
-              <ParticipantGroupCard
-                key={group.id}
-                id={group.id}
-                title={group.name}
-                members={groupedData.get(group.id) || []}
-                onDeleteParticipant={deleteParticipant}
-                onRename={(newName) => updateGroup(group.id, newName)}
-              />
-            ))}
+            <SortableContext items={groups.map((g) => g.id)} strategy={horizontalListSortingStrategy}>
+              {groups.map((group) => (
+                <ParticipantGroupCard
+                  key={group.id}
+                  id={group.id}
+                  title={group.name}
+                  members={groupedData.get(group.id) || []}
+                  onDeleteParticipant={deleteParticipant}
+                  onRename={(newName) => updateGroup(group.id, newName)}
+                />
+              ))}
+            </SortableContext>
 
             <ParticipantGroupCard
               id="unassigned"
@@ -154,11 +185,21 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
       </div>
 
       <DragOverlay>
-        {activeParticipant ? (
+        {activeParticipant && (
           <div className="opacity-90 shadow-2xl scale-[1.02] pointer-events-none w-72">
             <ParticipantRow person={activeParticipant} />
           </div>
-        ) : null}
+        )}
+        {activeGroup && (
+          <div className="opacity-80 shadow-2xl rotate-1 scale-[1.02] pointer-events-none w-80">
+            <ParticipantGroupCard
+              id={activeGroup.id}
+              title={activeGroup.name}
+              members={groupedData.get(activeGroup.id) || []}
+              onDeleteParticipant={() => {}}
+            />
+          </div>
+        )}
       </DragOverlay>
     </DndContext>
   );
