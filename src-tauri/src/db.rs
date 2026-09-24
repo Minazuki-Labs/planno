@@ -30,6 +30,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             id TEXT PRIMARY KEY,
             event_id TEXT NOT NULL,
             name TEXT NOT NULL,
+            position INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
         );
 

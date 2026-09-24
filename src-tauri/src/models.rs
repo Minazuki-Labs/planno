@@ -62,6 +62,8 @@ pub struct GroupItem {
     pub id: String,
     pub event_id: String,
     pub name: String,
+    #[serde(default)]
+    pub position: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

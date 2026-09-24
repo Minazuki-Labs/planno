@@ -4,6 +4,7 @@ export interface GroupItem {
   id: string;
   eventId: string;
   name: string;
+  position?: number;
 }
 
 export interface ParticipantItem {
