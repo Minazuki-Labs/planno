@@ -25,10 +25,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="h-screen overflow-hidden bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
       <header
         onMouseDown={handleStartDrag}
-        className="h-10 bg-slate-950/80 backdrop-blur border-b border-slate-800/80 flex items-center justify-between px-4 z-50 select-none cursor-default"
+        className="h-10 shrink-0 bg-slate-950/80 backdrop-blur border-b border-slate-800/80 flex items-center justify-between px-4 z-50 select-none cursor-default"
       >
         <div className="flex items-center gap-2 pointer-events-none">
           <div className="w-16" />
