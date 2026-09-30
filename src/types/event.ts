@@ -1,9 +1,14 @@
+export interface EventSettings {
+  groupsEnabled?: boolean;
+}
+
 export interface EventItem {
   id: string;
   name: string;
   eventDate: string;
   lastEdited: string;
   location?: string | null;
+  settings?: EventSettings;
 }
 
 export interface ActivityItem {

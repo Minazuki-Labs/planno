@@ -2,6 +2,17 @@ use serde::{Deserialize, Serialize};
 use rusqlite::Connection;
 use std::sync::Mutex;
 
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct EventSettings {
+    #[serde(default = "default_true")]
+    pub groups_enabled: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EventItem {
@@ -10,6 +21,8 @@ pub struct EventItem {
     pub event_date: String,
     pub last_edited: String,
     pub location: Option<String>,
+    #[serde(default)]
+    pub settings: EventSettings,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

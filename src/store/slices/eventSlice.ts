@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { EventItem } from "../../types/event";
+import { EventItem, EventSettings } from "../../types/event";
 import { StateSlice } from "../types";
 
 export interface EventSlice {
@@ -12,6 +12,7 @@ export interface EventSlice {
   createEvent: (newEvent: EventItem) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
   updateEvent: (updatedEvent: EventItem) => Promise<void>;
+  updateEventSettings: (id: string, settings: Partial<EventSettings>) => Promise<void>;
 }
 
 export const createEventSlice: StateSlice<EventSlice> = (set, get) => ({
@@ -69,5 +70,21 @@ export const createEventSlice: StateSlice<EventSlice> = (set, get) => ({
       console.error("Failed to update event:", err);
       set({ events: previousEvents, error: "Failed to update event" });
     }
+  },
+
+  updateEventSettings: async (id, partialSettings) => {
+    const targetEvent = get().events.find((e) => e.id === id);
+    if (!targetEvent) return;
+
+    const updatedEvent: EventItem = {
+      ...targetEvent,
+      lastEdited: new Date().toISOString(),
+      settings: {
+        ...targetEvent.settings,
+        ...partialSettings,
+      },
+    };
+
+    await get().updateEvent(updatedEvent);
   },
 });

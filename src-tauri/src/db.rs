@@ -10,7 +10,8 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             name TEXT NOT NULL,
             event_date TEXT NOT NULL,
             last_edited TEXT NOT NULL,
-            location TEXT
+            location TEXT,
+            settings TEXT NOT NULL DEFAULT '{}'
         );
 
         CREATE TABLE IF NOT EXISTS activities (
