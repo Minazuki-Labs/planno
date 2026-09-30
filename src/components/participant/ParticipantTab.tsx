@@ -3,6 +3,7 @@ import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, DragEndE
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { ParticipantItem, GroupItem } from "../../types/participant";
 import { useEventStore } from "../../store/useEventStore";
+import { ROLE_ORDER } from "./participantConstants";
 import { ParticipantHeader } from "./ParticipantHeader";
 import { ParticipantGroupCard } from "./ParticipantGroupCard";
 import { ParticipantRow } from "./ParticipantRow";
@@ -15,6 +16,7 @@ interface ParticipantTabProps {
 
 export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const {
+    events,
     groups,
     participants,
     fetchGroups,
@@ -32,6 +34,10 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
   const [activeParticipant, setActiveParticipant] = useState<ParticipantItem | null>(null);
   const [activeGroup, setActiveGroup] = useState<GroupItem | null>(null);
+
+  // Check event setting
+  const currentEvent = events.find((e) => e.id === eventId);
+  const groupsEnabled = currentEvent?.settings?.groupsEnabled ?? true;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -55,7 +61,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
     );
   }, [participants, searchQuery]);
 
-  // Group categorized data
+  // Categorize for grouped view
   const groupedData = useMemo(() => {
     const map = new Map<string | null, ParticipantItem[]>();
 
@@ -69,6 +75,16 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
 
     return map;
   }, [groups, filteredParticipants]);
+
+  // Sorted participants for the single combined card view
+  const { teachers, nonTeachers } = useMemo(() => {
+    return {
+      teachers: filteredParticipants.filter((m) => m.role === "teacher"),
+      nonTeachers: filteredParticipants
+        .filter((m) => m.role !== "teacher")
+        .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role]),
+    };
+  }, [filteredParticipants]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -121,86 +137,124 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
   const unassigned = groupedData.get(null) || [];
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      autoScroll={{ threshold: { x: 0.15, y: 0.15 }, acceleration: 15 }}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex flex-col h-full space-y-6">
-        <ParticipantHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onOpenGroupModal={() => setIsGroupModalOpen(true)}
-          onOpenParticipantModal={() => setIsParticipantModalOpen(true)}
-        />
+    <div className="flex flex-col h-full space-y-6">
+      <ParticipantHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onOpenGroupModal={() => setIsGroupModalOpen(true)}
+        onOpenParticipantModal={() => setIsParticipantModalOpen(true)}
+        showAddGroup={groupsEnabled}
+      />
 
-        {groups.length === 0 && participants.length === 0 ? (
+      {!groupsEnabled ? (
+        /* Combined Card (When groups are disabled) */
+        filteredParticipants.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-slate-800/70 rounded-2xl bg-slate-900/30">
-            <h3 className="text-sm font-semibold text-slate-200">No participants or groups yet</h3>
-            <p className="text-xs text-slate-400 mt-1">Create groups and add members to organise your roster.</p>
+            <h3 className="text-sm font-semibold text-slate-200">No participants yet</h3>
+            <p className="text-xs text-slate-400 mt-1">Add participants to build your roster.</p>
           </div>
         ) : (
-          <div className="flex flex-row gap-5 overflow-x-auto pb-4 items-start scrollbar-thin scrollbar-thumb-slate-800">
-            <SortableContext items={groups.map((g) => g.id)} strategy={horizontalListSortingStrategy}>
-              {groups.map((group) => (
-                <ParticipantGroupCard
-                  key={group.id}
-                  id={group.id}
-                  title={group.name}
-                  members={groupedData.get(group.id) || []}
-                  onDeleteParticipant={deleteParticipant}
-                  onRename={(newName) => updateGroup(group.id, newName)}
-                />
+          <div className="w-full bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-md shadow-lg flex flex-col max-h-[calc(100vh-220px)]">
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-900/90 border-b border-slate-800/70 select-none">
+              <span className="text-sm font-semibold text-slate-100">All Participants</span>
+              <span className="text-[11px] bg-slate-800 border border-slate-700/50 text-slate-300 px-2 py-0.5 rounded-full font-medium">
+                {filteredParticipants.length}
+              </span>
+            </div>
+
+            <div className="p-3.5 flex-1 flex flex-col gap-2.5 overflow-y-auto">
+              {teachers.map((person) => (
+                <ParticipantRow key={person.id} person={person} onDelete={deleteParticipant} />
               ))}
-            </SortableContext>
-
-            <ParticipantGroupCard
-              id="unassigned"
-              title="Unassigned"
-              members={unassigned}
-              isUnassigned
-              onDeleteParticipant={deleteParticipant}
-            />
+              {teachers.length > 0 && nonTeachers.length > 0 && (
+                <div className="border-t border-slate-800/80 my-1" />
+              )}
+              {nonTeachers.map((person) => (
+                <ParticipantRow key={person.id} person={person} onDelete={deleteParticipant} />
+              ))}
+            </div>
           </div>
-        )}
+        )
+      ) : (
+        /* Multi-Group Card (When groups are enabled) */
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          autoScroll={{ threshold: { x: 0.15, y: 0.15 }, acceleration: 15 }}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          {groups.length === 0 && participants.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-slate-800/70 rounded-2xl bg-slate-900/30">
+              <h3 className="text-sm font-semibold text-slate-200">No participants or groups yet</h3>
+              <p className="text-xs text-slate-400 mt-1">Create groups and add members to organise your roster.</p>
+            </div>
+          ) : (
+            <div className="flex flex-row gap-5 overflow-x-auto pb-4 items-start scrollbar-thin scrollbar-thumb-slate-800">
+              <SortableContext items={groups.map((g) => g.id)} strategy={horizontalListSortingStrategy}>
+                {groups.map((group) => (
+                  <ParticipantGroupCard
+                    key={group.id}
+                    id={group.id}
+                    title={group.name}
+                    members={groupedData.get(group.id) || []}
+                    onDeleteParticipant={deleteParticipant}
+                    onRename={(newName) => updateGroup(group.id, newName)}
+                  />
+                ))}
+              </SortableContext>
 
-        <AddGroupModal
-          isOpen={isGroupModalOpen}
-          onClose={() => setIsGroupModalOpen(false)}
-          onSubmit={async (name) => {
-            await createGroup({ id: crypto.randomUUID(), eventId, name });
-          }}
-        />
+              <ParticipantGroupCard
+                id="unassigned"
+                title="Unassigned"
+                members={unassigned}
+                isUnassigned
+                onDeleteParticipant={deleteParticipant}
+              />
+            </div>
+          )}
 
-        <AddParticipantModal
-          isOpen={isParticipantModalOpen}
-          groups={groups}
-          onClose={() => setIsParticipantModalOpen(false)}
-          onSubmit={async (data) => {
-            await createParticipant({ id: crypto.randomUUID(), eventId, ...data });
-          }}
-        />
-      </div>
+          <DragOverlay>
+            {activeParticipant && (
+              <div className="opacity-90 shadow-2xl scale-[1.02] pointer-events-none w-72">
+                <ParticipantRow person={activeParticipant} />
+              </div>
+            )}
+            {activeGroup && (
+              <div className="opacity-80 shadow-2xl rotate-1 scale-[1.02] pointer-events-none w-80">
+                <ParticipantGroupCard
+                  id={activeGroup.id}
+                  title={activeGroup.name}
+                  members={groupedData.get(activeGroup.id) || []}
+                  onDeleteParticipant={() => {}}
+                />
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
+      )}
 
-      <DragOverlay>
-        {activeParticipant && (
-          <div className="opacity-90 shadow-2xl scale-[1.02] pointer-events-none w-72">
-            <ParticipantRow person={activeParticipant} />
-          </div>
-        )}
-        {activeGroup && (
-          <div className="opacity-80 shadow-2xl rotate-1 scale-[1.02] pointer-events-none w-80">
-            <ParticipantGroupCard
-              id={activeGroup.id}
-              title={activeGroup.name}
-              members={groupedData.get(activeGroup.id) || []}
-              onDeleteParticipant={() => {}}
-            />
-          </div>
-        )}
-      </DragOverlay>
-    </DndContext>
+      <AddGroupModal
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        onSubmit={async (name) => {
+          await createGroup({ id: crypto.randomUUID(), eventId, name });
+        }}
+      />
+
+      <AddParticipantModal
+        isOpen={isParticipantModalOpen}
+        groups={groupsEnabled ? groups : []}
+        onClose={() => setIsParticipantModalOpen(false)}
+        onSubmit={async (data) => {
+          await createParticipant({
+            id: crypto.randomUUID(),
+            eventId,
+            ...data,
+            groupId: groupsEnabled ? data.groupId : null,
+          });
+        }}
+      />
+    </div>
   );
 };

@@ -3,6 +3,7 @@ interface ParticipantHeaderProps {
   onSearchChange: (value: string) => void;
   onOpenGroupModal: () => void;
   onOpenParticipantModal: () => void;
+  showAddGroup?: boolean;
 }
 
 export const ParticipantHeader = ({
@@ -10,13 +11,11 @@ export const ParticipantHeader = ({
   onSearchChange,
   onOpenGroupModal,
   onOpenParticipantModal,
+  showAddGroup = true,
 }: ParticipantHeaderProps) => {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/60">
       <div>
-        <span className="text-[10px] font-extrabold tracking-widest text-indigo-400 uppercase">
-          Roster & Teams
-        </span>
         <h2 className="text-xl font-bold text-slate-100 mt-0.5">Participants</h2>
       </div>
 
@@ -48,13 +47,16 @@ export const ParticipantHeader = ({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenGroupModal}
-          className="h-10.5 px-3 bg-slate-800/70 hover:bg-slate-800 text-slate-200 border border-slate-700/60 rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
-        >
-          + Add Group
-        </button>
+        {showAddGroup && (
+          <button
+            type="button"
+            onClick={onOpenGroupModal}
+            className="h-10.5 px-3 bg-slate-800/70 hover:bg-slate-800 text-slate-200 border border-slate-700/60 rounded-xl text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap active:scale-[0.98]"
+          >
+            + Add Group
+          </button>
+        )}
+
         <button
           type="button"
           onClick={onOpenParticipantModal}
