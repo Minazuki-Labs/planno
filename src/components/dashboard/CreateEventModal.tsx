@@ -150,7 +150,6 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
               startDate={startDate}
               endDate={endDate}
               isRange={isRange}
-              minDate={new Date()}
               onRangeToggle={setIsRange}
               onChange={(start, end) => {
                 setStartDate(start);

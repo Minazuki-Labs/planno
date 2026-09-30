@@ -24,7 +24,9 @@
         "decorations": true,
         "transparent": false,
         "center": false,
-        "focus": true
+        "focus": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {
