@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 
-import { EventItem, EventTabItem } from "../types/event";
+import { EventItem, EventTabItem, EventTabType } from "../types/event";
 import { useEventStore } from "../store/useEventStore";
 import { DetailsTab } from "../components/details/DetailsTab";
 import { ScheduleTab } from "../components/schedule/ScheduleTab";
 import { BudgetTab } from "../components/budget/BudgetTab";
 import { CommitteeTab } from "../components/committee/CommitteeTab";
 import { ParticipantTab } from "../components/participant/ParticipantTab";
+import { TabTypeIcon } from "../components/common/TabTypeIcon";
 
 const EMPTY_TABS: EventTabItem[] = [];
 
@@ -35,16 +36,16 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
     fetchEventTabs(event.id);
   }, [event.id, fetchEventTabs]);
 
-  useEffect(() => {
-    if (eventTabs.length > 0 && (!activeTabId || !tabs.some((t) => t.id === activeTabId))) {
-      setActiveTabId(eventTabs[0].id);
-    }
-  }, [eventTabs, activeTabId]);
-
   const tabs = [
     ...eventTabs.map((t) => ({ id: t.id, label: t.label, type: t.tabType })),
     { id: "details", label: "Details", type: "details" },
   ];
+
+  useEffect(() => {
+    if (eventTabs.length > 0 && (!activeTabId || !tabs.some((t) => t.id === activeTabId))) {
+      setActiveTabId(eventTabs[0].id);
+    }
+  }, [eventTabs, activeTabId, tabs]);
 
   const confirmDelete = () => {
     onDelete(event.id);
@@ -129,6 +130,9 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
                   clipRule="evenodd"
                 />
               </svg>
+              <span className="text-indigo-400">
+                <TabTypeIcon type={currentTab?.type as EventTabType} className="w-4 h-4 text-indigo-400 shrink-0" />
+              </span>
               <span>{currentTabLabel}</span>
               <svg
                 className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
@@ -160,7 +164,15 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
                           : "text-slate-300 hover:text-white hover:bg-slate-900"
                       }`}
                     >
-                      <span>{tab.label}</span>
+                      <div className="flex items-center gap-2.5">
+                        <span className={isActive ? "text-white" : "text-indigo-400"}>
+                          <TabTypeIcon 
+                            type={tab.type as EventTabType} 
+                            className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-indigo-400"}`} 
+                          />
+                        </span>
+                        <span>{tab.label}</span>
+                      </div>
                       {isActive && (
                         <svg className="w-4 h-4 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

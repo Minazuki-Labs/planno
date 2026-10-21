@@ -33,6 +33,10 @@ pub fn run() {
             commands::events::update_event,
 
             commands::tabs::get_event_tabs,
+            commands::tabs::create_event_tab,
+            commands::tabs::delete_event_tab,
+            commands::tabs::update_event_tab,
+            commands::tabs::reorder_event_tabs,
 
             commands::activities::get_activities,
             commands::activities::create_activity,
