@@ -27,6 +27,16 @@ pub struct EventItem {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct EventTabItem {
+    pub id: String,
+    pub event_id: String,
+    pub tab_type: String, // "schedule" | "participant" | "budget" | "committee"
+    pub label: String,
+    pub position: i64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ActivityItem {
     pub id: String,
     pub event_id: String,
