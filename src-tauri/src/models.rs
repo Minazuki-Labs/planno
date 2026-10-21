@@ -4,7 +4,7 @@ use std::sync::Mutex;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct EventSettings {
+pub struct ParticipantTabSettings {
     #[serde(default = "default_true")]
     pub groups_enabled: bool,
 }
@@ -21,8 +21,36 @@ pub struct EventItem {
     pub event_date: String,
     pub last_edited: String,
     pub location: Option<String>,
-    #[serde(default)]
-    pub settings: EventSettings,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum EventTabType {
+    Schedule,
+    Participant,
+    Budget,
+    Committee,
+}
+
+impl EventTabType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            EventTabType::Schedule => "schedule",
+            EventTabType::Participant => "participant",
+            EventTabType::Budget => "budget",
+            EventTabType::Committee => "committee",
+        }
+    }
+
+    pub fn from_str(s: &str) -> Result<Self, String> {
+        match s {
+            "schedule" => Ok(EventTabType::Schedule),
+            "participant" => Ok(EventTabType::Participant),
+            "budget" => Ok(EventTabType::Budget),
+            "committee" => Ok(EventTabType::Committee),
+            _ => Err(format!("Invalid tab type: {}", s)),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -30,9 +58,11 @@ pub struct EventItem {
 pub struct EventTabItem {
     pub id: String,
     pub event_id: String,
-    pub tab_type: String, // "schedule" | "participant" | "budget" | "committee"
+    pub tab_type: EventTabType,
     pub label: String,
     pub position: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub settings: Option<ParticipantTabSettings>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

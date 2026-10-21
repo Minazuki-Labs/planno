@@ -1,6 +1,43 @@
-export interface EventSettings {
+export enum EventTabType {
+  Schedule = "schedule",
+  Participant = "participant",
+  Budget = "budget",
+  Committee = "committee",
+}
+
+export interface ParticipantTabSettings {
   groupsEnabled?: boolean;
 }
+
+export interface BaseEventTabItem {
+  id: string;
+  eventId: string;
+  label: string;
+  position: number;
+}
+
+export interface ScheduleTabItem extends BaseEventTabItem {
+  tabType: EventTabType.Schedule;
+}
+
+export interface BudgetTabItem extends BaseEventTabItem {
+  tabType: EventTabType.Budget;
+}
+
+export interface CommitteeTabItem extends BaseEventTabItem {
+  tabType: EventTabType.Committee;
+}
+
+export interface ParticipantTabItem extends BaseEventTabItem {
+  tabType: EventTabType.Participant;
+  settings?: ParticipantTabSettings;
+}
+
+export type EventTabItem = 
+  | ScheduleTabItem 
+  | BudgetTabItem 
+  | CommitteeTabItem 
+  | ParticipantTabItem;
 
 export interface EventItem {
   id: string;
@@ -8,15 +45,6 @@ export interface EventItem {
   eventDate: string;
   lastEdited: string;
   location?: string | null;
-  settings?: EventSettings;
-}
-
-export interface EventTabItem {
-  id: string;
-  eventId: string;
-  tabType: "schedule" | "participant" | "budget" | "committee";
-  label: string;
-  position: number;
 }
 
 export interface ActivityItem {

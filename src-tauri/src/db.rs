@@ -10,8 +10,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             name TEXT NOT NULL,
             event_date TEXT NOT NULL,
             last_edited TEXT NOT NULL,
-            location TEXT,
-            settings TEXT NOT NULL DEFAULT '{}'
+            location TEXT
         );
 
         CREATE TABLE IF NOT EXISTS event_tabs (
@@ -20,6 +19,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             tab_type TEXT NOT NULL,
             label TEXT NOT NULL,
             position INTEGER NOT NULL DEFAULT 0,
+            settings TEXT NOT NULL DEFAULT '{}',
             FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
         );
 
