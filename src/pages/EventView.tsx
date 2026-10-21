@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 
-import { EventItem } from "../types/event";
+import { EventItem, EventTabItem } from "../types/event";
 import { useEventStore } from "../store/useEventStore";
 import { DetailsTab } from "../components/details/DetailsTab";
 import { ScheduleTab } from "../components/schedule/ScheduleTab";
@@ -8,16 +8,20 @@ import { BudgetTab } from "../components/budget/BudgetTab";
 import { CommitteeTab } from "../components/committee/CommitteeTab";
 import { ParticipantTab } from "../components/participant/ParticipantTab";
 
+const EMPTY_TABS: EventTabItem[] = [];
+
 interface EventViewProps {
   event: EventItem;
   onBack: () => void;
   onDelete: (eventId: string) => void;
 }
 
-type TabType = "schedule" | "participant" | "budget" | "committee" | "details";
-
 export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
-  const [activeTab, setActiveTab] = useState<TabType>("schedule");
+  const eventTabs = useEventStore((state) => state.eventTabs[event.id] ?? EMPTY_TABS);
+  const fetchEventTabs = useEventStore((state) => state.fetchEventTabs);
+  const updateEvent = useEventStore((state) => state.updateEvent);
+
+  const [activeTabId, setActiveTabId] = useState<string>("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [useDropdown, setUseDropdown] = useState(false);
@@ -27,20 +31,25 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
   const fullNavMeasureRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const updateEvent = useEventStore((state) => state.updateEvent);
+  useEffect(() => {
+    fetchEventTabs(event.id);
+  }, [event.id, fetchEventTabs]);
+
+  useEffect(() => {
+    if (eventTabs.length > 0 && (!activeTabId || !tabs.some((t) => t.id === activeTabId))) {
+      setActiveTabId(eventTabs[0].id);
+    }
+  }, [eventTabs, activeTabId]);
+
+  const tabs = [
+    ...eventTabs.map((t) => ({ id: t.id, label: t.label, type: t.tabType })),
+    { id: "details", label: "Details", type: "details" },
+  ];
 
   const confirmDelete = () => {
     onDelete(event.id);
     onBack();
   };
-
-  const tabs: { id: TabType; label: string }[] = [
-    { id: "schedule", label: "Schedule" },
-    { id: "participant", label: "Participant" },
-    { id: "budget", label: "Budget" },
-    { id: "committee", label: "Committee" },
-    { id: "details", label: "Details" },
-  ];
 
   useLayoutEffect(() => {
     const checkOverflow = () => {
@@ -74,11 +83,8 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleUpdateEvent = async (updatedEvent: EventItem) => {
-    await updateEvent(updatedEvent);
-  };
-
-  const currentTabLabel = tabs.find((tab) => tab.id === activeTab)?.label || "Menu";
+  const currentTab = tabs.find((t) => t.id === activeTabId);
+  const currentTabLabel = currentTab?.label || "Menu";
 
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 space-y-6">
@@ -139,13 +145,13 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-52 bg-slate-950/95 border border-slate-800 rounded-2xl p-2 shadow-2xl backdrop-blur-xl z-50 space-y-1 animate-in fade-in zoom-in-95 duration-100">
                 {tabs.map((tab) => {
-                  const isActive = activeTab === tab.id;
+                  const isActive = activeTabId === tab.id;
                   return (
                     <button
                       key={tab.id}
                       type="button"
                       onClick={() => {
-                        setActiveTab(tab.id);
+                        setActiveTabId(tab.id);
                         setIsDropdownOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
@@ -173,9 +179,9 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setActiveTabId(tab.id)}
                 className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                  activeTab === tab.id
+                  activeTabId === tab.id
                     ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                 }`}
@@ -189,17 +195,17 @@ export const EventView = ({ event, onBack, onDelete }: EventViewProps) => {
 
       {/* Tab Views */}
       <main>
-        {activeTab === "details" && (
+        {currentTab?.type === "details" && (
           <DetailsTab 
             event={event} 
             onDelete={() => setShowConfirmModal(true)}
-            onUpdate={handleUpdateEvent} 
+            onUpdate={async (updated) => { await updateEvent(updated); }} 
           />
         )}
-        {activeTab === "schedule" && <ScheduleTab event={event} />}
-        {activeTab === "budget" && <BudgetTab />}
-        {activeTab === "committee" && <CommitteeTab />}
-        {activeTab === "participant" && <ParticipantTab eventId={event.id} />}
+        {currentTab?.type === "schedule" && <ScheduleTab event={event} />}
+        {currentTab?.type === "budget" && <BudgetTab />}
+        {currentTab?.type === "committee" && <CommitteeTab />}
+        {currentTab?.type === "participant" && <ParticipantTab eventId={event.id} />}
       </main>
 
       {/* Confirmation Modal */}

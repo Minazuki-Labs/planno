@@ -11,6 +11,14 @@ export interface EventItem {
   settings?: EventSettings;
 }
 
+export interface EventTabItem {
+  id: string;
+  eventId: string;
+  tabType: "schedule" | "participant" | "budget" | "committee";
+  label: string;
+  position: number;
+}
+
 export interface ActivityItem {
   id: string;
   eventId: string;

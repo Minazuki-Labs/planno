@@ -35,14 +35,39 @@ pub fn get_events(state: State<DbState>) -> Result<Vec<EventItem>, String> {
 
 #[tauri::command]
 pub fn create_event(state: State<DbState>, item: EventItem) -> Result<(), String> {
-    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut conn = state.0.lock().map_err(|e| e.to_string())?;
     let settings_str = serde_json::to_string(&item.settings).map_err(|e| e.to_string())?;
 
-    conn.execute(
+    let tx = conn.transaction().map_err(|e| e.to_string())?;
+
+    tx.execute(
         "INSERT INTO events (id, name, event_date, last_edited, location, settings) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         params![item.id, item.name, item.event_date, item.last_edited, item.location, settings_str],
     )
     .map_err(|e| e.to_string())?;
+
+    let default_tabs = [
+        ("schedule", "Schedule", 0),
+        ("participant", "Participant", 1),
+        ("budget", "Budget", 2),
+        ("committee", "Committee", 3),
+    ];
+
+    for (tab_type, label, position) in default_tabs {
+        let tab_id: String = tx.query_row(
+            "SELECT lower(hex(randomblob(16)))",
+            [],
+            |row| row.get(0),
+        ).map_err(|e| e.to_string())?;
+
+        tx.execute(
+            "INSERT INTO event_tabs (id, event_id, tab_type, label, position) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![tab_id, item.id, tab_type, label, position],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
+    tx.commit().map_err(|e| e.to_string())?;
 
     Ok(())
 }
