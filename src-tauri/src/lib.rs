@@ -1,6 +1,6 @@
-mod commands;
-mod db;
-mod models;
+pub mod commands;
+pub mod db;
+pub mod models;
 
 use db::init_db;
 use models::DbState;
