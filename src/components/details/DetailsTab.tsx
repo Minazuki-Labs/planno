@@ -40,7 +40,7 @@ export const DetailsTab = ({ event, onDelete, onUpdate }: DetailsTabProps) => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
-  const groupsEnabled = event.settings?.groupsEnabled ?? true;
+  const groupsEnabled = event.settings.groupsEnabled;
 
   const handleToggleGroups = () => {
     const updated: EventItem = {

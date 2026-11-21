@@ -37,7 +37,7 @@ export const ParticipantTab = ({ eventId }: ParticipantTabProps) => {
 
   // Check event setting
   const currentEvent = events.find((e) => e.id === eventId);
-  const groupsEnabled = currentEvent?.settings?.groupsEnabled ?? true;
+  const groupsEnabled = currentEvent ? currentEvent.settings.groupsEnabled : true;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
