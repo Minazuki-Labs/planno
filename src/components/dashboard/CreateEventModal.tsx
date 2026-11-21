@@ -82,6 +82,9 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
       eventDate: formattedEventDate,
       lastEdited: new Date().toISOString(),
       ...(location.trim() && { location: location.trim() }),
+      settings: {
+        groupsEnabled: true,
+      },
     };
 
     createEvent(newEvent);

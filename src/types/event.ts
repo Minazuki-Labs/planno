@@ -1,5 +1,5 @@
 export interface EventSettings {
-  groupsEnabled?: boolean;
+  groupsEnabled: boolean;
 }
 
 export interface EventItem {
@@ -8,7 +8,7 @@ export interface EventItem {
   eventDate: string;
   lastEdited: string;
   location?: string | null;
-  settings?: EventSettings;
+  settings: EventSettings;
 }
 
 export interface ActivityItem {
